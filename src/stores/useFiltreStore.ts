@@ -17,7 +17,7 @@ type FiltreState = {
   updateContenuHtml: (newContenuHtml: string | undefined) => void
 }
 
-export const useFiltre = create<FiltreState>((set) => ({
+export const useFiltreStore = create<FiltreState>((set) => ({
   categorie: undefined,
   statut: undefined,
   theme: undefined,
