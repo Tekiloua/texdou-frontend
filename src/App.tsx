@@ -2,18 +2,14 @@ import { DocumentList } from "./components/document-list"
 import Navbar from "./components/navbar"
 import { Chatbot } from "./components/chat/chatbot"
 import { TexteDetails } from "./components/texte-details"
-import { Route, Routes, useLocation } from "react-router-dom"
+import { Route, Routes } from "react-router-dom"
 import { LoginForm } from "./components/login-form"
 import { RegisterForm } from "./components/register-form"
-import Test from "./components/test"
 
 function App() {
-  const location = useLocation()
   return (
-    <div
-      className={`${location.pathname != "/test" ? "grid h-screen grid-rows-[auto_fr]" : ""} `}
-    >
-      {location.pathname != "/test" && <Navbar />}
+    <div className="grid h-screen grid-rows-[auto_fr]">
+      <Navbar />
       <div className="h-full pt-20">
         <Routes>
           <Route path="/chatbot" element={<Chatbot />} />
@@ -21,7 +17,6 @@ function App() {
           <Route path="/documents/:id" element={<TexteDetails />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/test" element={<Test />} />
         </Routes>
       </div>
     </div>
