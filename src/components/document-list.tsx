@@ -25,9 +25,9 @@ import { useFiltre } from "@/store/useFiltre"
 const TexteItem = ({
   id,
   titre,
-  contenu_html,
   resume,
-  date_mise_en_vigueur,
+  numero,
+  // date_mise_en_vigueur,
   statut_id,
   categorie_id,
 }: TexteType) => {
@@ -48,61 +48,55 @@ const TexteItem = ({
     initialData: () => queryClient.getQueryData<StatutType[]>(["statuts"]),
   })
 
-  const statusColor =
-    statut_id === 1
-      ? "bg-amber-300 text-foreground"
-      : statut_id === 2
-        ? "bg-orange-200 text-foreground"
-        : statut_id === 3
-          ? "bg-green-300 text-foreground"
-          : "bg-gray-200 text-foreground"
+  // const statusColor =
+  //   statut_id === 1
+  //     ? "bg-amber-300 text-foreground"
+  //     : statut_id === 2
+  //       ? "bg-orange-200 text-foreground"
+  //       : statut_id === 3
+  //         ? "bg-green-300 text-foreground"
+  //         : "bg-gray-200 text-foreground"
 
   //on prend une partie du titre juste pour l'affichage
   const titre_first = titre?.slice(0, 50)
   //on prend une partie du contenu juste pour l'affichage
-  const resume_first =
-    resume?.length == 0 ? "Aucun résumé disponible" : resume?.slice(0, 260)
+  const resume_first = resume?.slice(0, 260)
 
   return (
-    <div className="relative flex h-85 max-w-170 flex-col gap-3 bg-primary-foreground border border-slate-400/40 text-sm shadow-md">
-      <div className="flex h-[15%] w-full items-center justify-center bg-muted-foreground px-2 py-1 text-sm text-muted">
+    <Link
+      to={`/documents/${id}`}
+      className="flex h-85 max-w-100 min-w-50 cursor-pointer flex-col gap-3 rounded-md border border-b-4 bg-card text-sm shadow-sm active:border-b"
+    >
+      <div className="flex h-[15%] items-center justify-center px-2 py-1 text-sm text-card-foreground">
         <span>
-          {dataCategories?.find((cat) => cat.id === categorie_id)?.nom}
+          <span>
+            {dataCategories?.find((cat) => cat.id === categorie_id)?.nom}
+          </span>
+          {!numero ? <></> : <span> - {numero}</span>}
         </span>
-        {!date_mise_en_vigueur ? (
-          <></>
-        ) : (
-          <span> - {date_mise_en_vigueur.toString()}</span>
-        )}
       </div>
-      <h1 className="my-3 h-12 w-full overflow-hidden px-[10%] pt-2 font-semibold">
+      <h1 className="my-3 h-12 w-full overflow-hidden px-[10%] pt-2 font-semibold text-card-foreground">
         <p>{titre_first}...</p>
       </h1>
-      <p
-        className={`mx-3 mb-3 h-30 overflow-hidden pt-2 text-xs ${resume_first ? "" : "flex items-center justify-center"}`}
+      <div
+        className={`mx-3 mb-3 h-30 overflow-hidden pt-2 text-sm ${resume_first ? "" : "flex items-center justify-center"}`}
       >
         {resume_first}
-        {resume_first?.length == 0 ? "" : "..."}
-      </p>
+        {resume_first?.length == 0 ? <NoResumeAvailable /> : "..."}
+      </div>
       <div className="flex items-center justify-between px-5">
         <Link to={`/documents/${id}`}>
-          <Button
-            variant={"ghost_more"}
-            size={"sm"}
-            className="rouded-sm text-xs text-blue-600"
-          >
+          <Button variant={"ghost"} size={"sm"}>
             En savoir plus <ArrowRight className="size-4" />
           </Button>
         </Link>
-        <Button
-          variant={"default"}
-          size={"sm"}
-          className={`rounded-sm ${statusColor}`}
-        >
+        <Button 
+        variant={"secondary"}
+        className="">
           {dataStatuts?.find((statut) => statut.id === statut_id)?.nom}
         </Button>
       </div>
-    </div>
+    </Link>
   )
 }
 
@@ -197,7 +191,7 @@ export const DocumentList = () => {
   //     texte.resume?.length ==
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col items-center gap-10">
       <Filtre
         dataCategories={dataCategories}
         dataStatuts={dataStatuts}
@@ -205,7 +199,7 @@ export const DocumentList = () => {
       />
       <div>
         {nbPage > 0 ? (
-          <div className="mx-auto grid max-w-7xl gap-6 sm:grid-cols-2 md:grid-cols-2 md:px-8 lg:grid-cols-3">
+          <div className="mx-auto grid max-w-2xl gap-8 p-4 sm:max-w-3xl lg:max-w-7xl lg:grid-cols-3">
             {dataTextesFiltered
               .slice(
                 currentPage * nbDocInPage,
@@ -217,9 +211,9 @@ export const DocumentList = () => {
                   id={texte.id}
                   titre={texte.titre}
                   categorie_id={texte.categorie_id}
-                  contenu_html={texte.contenu_html}
+                  numero={texte.numero}
                   resume={texte.resume}
-                  date_mise_en_vigueur={texte.date_mise_en_vigueur}
+                  // date_mise_en_vigueur={texte.date_mise_en_vigueur}
                   statut_id={texte.statut_id}
                 />
               ))}
@@ -231,7 +225,7 @@ export const DocumentList = () => {
 
       <div className="">
         <Pagination className="my-2">
-          <PaginationContent className="grid grid-cols-25">
+          <PaginationContent className="grid grid-cols-15 lg:grid-cols-20">
             {Array.from({ length: nbPage }).map((_, i) => {
               const page = i
 
@@ -257,8 +251,16 @@ export const DocumentList = () => {
 
 const NoDocumentFound = () => {
   return (
-    <div className="mx-auto flex h-105 max-w-7xl items-center justify-center">
+    <div className="flex h-105 max-w-7xl items-center justify-center">
       Aucun document trouvé
     </div>
+  )
+}
+
+const NoResumeAvailable = () => {
+  return (
+    <p className="flex h-30 items-center justify-center">
+      Aucun résumé disponible
+    </p>
   )
 }

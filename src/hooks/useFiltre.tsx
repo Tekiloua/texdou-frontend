@@ -47,6 +47,5 @@ export const useFilteredTextes = (textes: TexteType[]): TexteType[] => {
     })
   }
 
-
   return dataFiltered
 }

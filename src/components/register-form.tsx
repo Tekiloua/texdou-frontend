@@ -25,12 +25,50 @@ export function RegisterForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="rounded-lg border-slate-400 bg-card shadow-lg">
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Inscription</CardTitle>
-          <CardDescription>Créez votre compte</CardDescription>
+          <CardTitle className="text-xl">Créer un compte</CardTitle>
         </CardHeader>
         <CardContent>
           <form>
             <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <Input
+                  id="email"
+                  type="email"
+                  className="bg-white"
+                  placeholder="email@example.com"
+                  required
+                />
+              </Field>
+              <Field>
+                <div className="flex items-center">
+                  <FieldLabel htmlFor="password">Mot de passe</FieldLabel>
+                  <a
+                    href="#"
+                    className="ml-auto text-xs text-blue-600 underline-offset-4 hover:underline"
+                  >
+                    Mot de passe oublié ?
+                  </a>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  className="bg-white"
+                  placeholder="mot de passe"
+                  required
+                />
+              </Field>
+              <Field>
+                <Button
+                  className="rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
+                  type="submit"
+                >
+                  S'inscrire
+                </Button>
+              </Field>
+              <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
+                Ou continué avec
+              </FieldSeparator>
               <Field>
                 <Button variant="outline" type="button">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -51,56 +89,17 @@ export function RegisterForm({
                   Inscription avec Google
                 </Button>
               </Field>
-              <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
-                Ou continué avec
-              </FieldSeparator>
-              <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  type="email"
-                  className="bg-white"
-                  placeholder="email@example.com"
-                  required
-                />
-              </Field>
-              <Field>
-                <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Mot de passe</FieldLabel>
-                  <a
-                    href="#"
-                    className="ml-auto text-sm text-blue-800 underline-offset-4 hover:underline"
-                  >
-                    Mot de passe oublié ?
-                  </a>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  className="bg-white"
-                  placeholder="mot de passe"
-                  required
-                />
-              </Field>
-              <Field>
-                <Button
-                  className="rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
-                  type="submit"
-                >
-                  S'inscrire
-                </Button>
-                <FieldDescription className="text-center">
-                  A déjà compte?{" "}
-                  <Link
-                    to={"/login"}
-                    className={`flex items-center gap-1 ${location.pathname == "/login" ? "font-bold" : "font-normal"}`}
-                  >
-                    {" "}
-                    vous connecter
-                  </Link>
-                </FieldDescription>
-              </Field>
             </FieldGroup>
+            <div className="mx-auto mt-4 flex items-center justify-center gap-2">
+              Vous avez déjà compte ?{" "}
+              <Link
+                to={"/login"}
+                className={`flex items-center gap-1 underline ${location.pathname == "/login" ? "font-bold" : "font-normal"}`}
+              >
+                {" "}
+                vous connecter
+              </Link>
+            </div>
           </form>
         </CardContent>
       </Card>

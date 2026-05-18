@@ -63,12 +63,12 @@ export const Filtre = ({
   // console.log("-------------------------------")
 
   return (
-    <div className="flex h-30 w-full flex-col items-center justify-center gap-3 overflow-hidden">
-      <div className="flex items-center gap-10">
+    <div className="flex items-center justify-center gap-6 overflow-hidden lg:flex-col">
+      <div className="flex flex-col items-center gap-10 lg:flex-row">
         <div className="flex flex-col gap-1">
           <Label>Mots clés</Label>
           <Input
-            className="w-60 text-xs"
+            className="max-w-60 min-w-45 border border-card-foreground text-xs"
             placeholder="mots clés"
             onChange={(e) => updateMotsCles(e.target.value)}
           />
@@ -79,7 +79,7 @@ export const Filtre = ({
             defaultValue="toutes_les_categories"
             onValueChange={updateCategorie}
           >
-            <SelectTrigger className="w-60">
+            <SelectTrigger className="max-w-60 min-w-45 border border-card-foreground">
               <SelectValue></SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -100,7 +100,7 @@ export const Filtre = ({
         <div className="flex flex-col gap-1">
           <Label>Thème</Label>
           <Select defaultValue={"tous_les_themes"} onValueChange={updateTheme}>
-            <SelectTrigger className="w-60">
+            <SelectTrigger className="max-w-60 min-w-45 border border-card-foreground">
               <SelectValue></SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -121,7 +121,7 @@ export const Filtre = ({
             defaultValue={"tous_les_statuts"}
             onValueChange={updateStatut}
           >
-            <SelectTrigger className="w-60">
+            <SelectTrigger className="max-w-60 min-w-45 border border-card-foreground">
               <SelectValue></SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -140,12 +140,12 @@ export const Filtre = ({
         </div>
       </div>
 
-      <div className="flex items-center gap-10">
+      <div className="flex flex-col items-center gap-10 lg:flex-row">
         <div className="flex flex-col gap-1">
           <Label>Du :</Label>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <button className="flex w-60 cursor-pointer items-center justify-between border px-4 py-1 text-sm">
+              <button className="flex max-w-60 min-w-45 cursor-pointer items-center justify-between border px-4 py-1 text-sm">
                 <span className="text-sm">
                   {date_debut == undefined ? (
                     <>Date de début</>
@@ -169,7 +169,7 @@ export const Filtre = ({
                   Choisir la date inscrit sur le document
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <div className="flex w-full justify-center">
+              <div className="flex w-full justify-center bg-background">
                 <Calendar
                   mode="single"
                   selected={date_debut}
@@ -197,7 +197,7 @@ export const Filtre = ({
           <Label>Au :</Label>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <button className="flex w-60 cursor-pointer items-center justify-between border px-4 py-1 text-sm">
+              <button className="flex max-w-60 min-w-45 cursor-pointer items-center justify-between border px-4 py-1 text-sm">
                 <span className="text-sm">
                   {date_fin == undefined ? (
                     <>Date de fin</>
@@ -248,7 +248,7 @@ export const Filtre = ({
         <div className="flex flex-col gap-1">
           <Label>Année</Label>
           <Select defaultValue={"toutes_les_annees"}>
-            <SelectTrigger className="w-60">
+            <SelectTrigger className="max-w-60 min-w-45 border border-card-foreground">
               <SelectValue></SelectValue>
             </SelectTrigger>
             <SelectContent>
