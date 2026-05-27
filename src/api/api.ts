@@ -1,58 +1,102 @@
 import axios from "axios"
 
-const server_url = "http://localhost:8000"
+const SERVER_URL = "http://localhost:8000"
 
-export const fetchCategories = async () => {
-  const response = await axios.get(`${server_url}/categories`)
-  return response.data
+// ─── In-memory access token ───────────────────────────────────────────────────
+let accessToken: string | null = null
+
+export const setAccessToken = (token: string | null) => {
+  accessToken = token
 }
 
-export const fetchDocuments = async () => {
-  const response = await axios.get(`${server_url}/documents`)
-  return response.data
+export const clearAccessToken = () => {
+  accessToken = null
 }
 
-export const fetchHistoriques = async () => {
-  const response = await axios.get(`${server_url}/historiques`)
-  return response.data
+// ─── Axios instance ───────────────────────────────────────────────────────────
+const api = axios.create({
+  baseURL: SERVER_URL,
+  withCredentials: true, // envoie le cookie refresh_token automatiquement
+})
+
+// ─── Request interceptor : injecte le Bearer token ───────────────────────────
+api.interceptors.request.use((config) => {
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`
+  }
+  return config
+})
+
+// ─── Response interceptor : refresh automatique sur 401 ──────────────────────
+let isRefreshing = false
+let refreshSubscribers: ((token: string) => void)[] = []
+
+function onRefreshed(token: string) {
+  refreshSubscribers.forEach((cb) => cb(token))
+  refreshSubscribers = []
 }
 
-export const fetcLiensUtiles = async () => {
-  const response = await axios.get(`${server_url}/liens-utiles`)
-  return response.data
-}
+api.interceptors.response.use(
+  (response) => response,
 
-export const fetchStatuts = async () => {
-  const response = await axios.get(`${server_url}/statuts`)
-  return response.data
-}
+  async (error) => {
+    const originalRequest = error.config
 
-export const fetchTextes = async () => {
-  const response = await axios.get(`${server_url}/textes`)
-  return response.data
-}
+    // Si 401 et pas déjà retryé
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true
 
-export const fetchTexteById = async (id: string) => {
-  const response = await axios.get(`${server_url}/textes/${id}`)
-  return response.data
-}
+      // Si un refresh est déjà en cours, on attend
+      if (isRefreshing) {
+        return new Promise((resolve) => {
+          refreshSubscribers.push((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`
+            resolve(api(originalRequest))
+          })
+        })
+      }
 
-export const fetchTextesDocuments = async () => {
-  const response = await axios.get(`${server_url}/textes-documents`)
-  return response.data
-}
+      isRefreshing = true
 
-export const fetchTextesReferences = async () => {
-  const response = await axios.get(`${server_url}/textes-references`)
-  return response.data
-}
+      try {
+        // Le cookie refresh_token est envoyé automatiquement (withCredentials)
+        const response = await api.post("/refresh")
+        const newToken = response.data.access_token
 
-export const fetchTextesThemes = async () => {
-  const response = await axios.get(`${server_url}/textes-themes`)
-  return response.data
-}
+        setAccessToken(newToken)
+        isRefreshing = false
+        onRefreshed(newToken)
 
-export const fetchThemes = async () => {
-  const response = await axios.get(`${server_url}/themes`)
-  return response.data
-}
+        originalRequest.headers.Authorization = `Bearer ${newToken}`
+        return api(originalRequest)
+      } catch (err) {
+        // Refresh échoué → déconnexion
+        isRefreshing = false
+        clearAccessToken()
+        window.location.href = "/login"
+        return Promise.reject(err)
+      }
+    }
+
+    return Promise.reject(error)
+  }
+)
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+export const logoutRequest = () => api.post("/logout")
+
+// ─── API calls ────────────────────────────────────────────────────────────────
+export const fetchCategories      = () => api.get("/categories").then(r => r.data)
+export const fetchStats           = () => api.get("/stats").then(r => r.data)
+export const fetchDocuments       = () => api.get("/documents").then(r => r.data)
+export const fetchHistoriques     = () => api.get("/historiques").then(r => r.data)
+export const fetchLiensUtiles     = () => api.get("/liens-utiles").then(r => r.data)
+export const fetchStatuts         = () => api.get("/statuts").then(r => r.data)
+export const fetchTextes          = () => api.get("/textes").then(r => r.data)
+export const fetchTexteById       = (id: string) => api.get(`/textes/${id}`).then(r => r.data)
+export const fetchTextesDocuments = () => api.get("/textes-documents").then(r => r.data)
+export const fetchTextesReferences= () => api.get("/textes-references").then(r => r.data)
+export const fetchTextesThemes    = () => api.get("/textes-themes").then(r => r.data)
+export const fetchThemes          = () => api.get("/themes").then(r => r.data)
+
+export default api

@@ -1,110 +1,126 @@
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-  FieldSeparator,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
+import { useMutation } from "@tanstack/react-query"
+import api, { setAccessToken } from "@/api/api"
+import { useAuthStore } from "@/store/useAuthStore"
+import type { FormEvent } from "react"
+import { useState } from "react"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
 
-export function LoginForm({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
+  const navigate = useNavigate()
+  const setUser = useAuthStore((s) => s.setUser)
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const mutation = useMutation({
+    mutationFn: async (data: { numero: string; password: string }) => {
+      const response = await api.post("/login", data)
+      return response.data
+    },
+    onSuccess: async (data) => {
+      
+      setAccessToken(data.access_token)
+
+      // Récupère les infos utilisateur après connexion
+      const meRes = await api.get("/me")
+      setUser({ numero: meRes.data.numero })
+
+      navigate("/dashboard")
+    },
+    onError: (error:any) => {
+      console.log(error)
+      setError("Numéro ou mot de passe incorrect.")
+    },
+  })
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setError(null)
+    const form = new FormData(e.currentTarget)
+    mutation.mutate({
+      numero: form.get("numero") as string,
+      password: form.get("password") as string,
+    })
+  }
+
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="rounded-lg border-slate-400 bg-card shadow-lg">
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl">Connexion</CardTitle>
-          {/* <CardDescription>
-            Connexion avec Apple ou Compte google
-          </CardDescription> */}
-        </CardHeader>
-        <CardContent>
-          <form>
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  type="email"
-                  className="bg-white"
-                  placeholder="email@exemple.com"
-                  required
-                />
-              </Field>
-              <Field>
-                <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Mot de passe</FieldLabel>
-                  <a
-                    href="#"
-                    className="ml-auto text-sm text-blue-800 underline-offset-4 hover:underline"
-                  >
-                    Mot de pass oublié ?
-                  </a>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  className="bg-white"
-                  placeholder="mot de passe"
-                  required
-                />
-              </Field>
-              <Field>
-                <Button
-                  className="rounded-md bg-accent text-accent-foreground hover:bg-accent/80"
-                  type="submit"
-                >
-                  Connexion
-                </Button>
-              </Field>
-              <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
-                Ou continuer avec
-              </FieldSeparator>
-              <Field>
-                <Button variant="outline" type="button">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path
-                      d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"
-                      fill="currentColor"
-                    />
-                  </svg>
-                  Connexion avec Apple
-                </Button>
-                <Button variant="outline" type="button">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path
-                      d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                  Connexion avec Google
-                </Button>
-              </Field>
-            </FieldGroup>
-            <div className="mt-4 text-center">
-              Vous n&apos;avez pas de compte ?{" "}
-              <Link to={"/register"} className="underline">S&apos;inscrire</Link>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-      <FieldDescription className="px-6 text-center">
-        En cliquant sur continuer, vous acceptez nos{" "}
-        <a href="#">Conditions d'utilisation</a> et notre{" "}
-        <a href="#">Politique de confidentialité</a>.
-      </FieldDescription>
+    <div className={cn("w-full max-w-sm", className)} {...props}>
+      <div className="mb-8 text-center">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Connexion</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Accédez à votre espace TEXDOU</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Numéro IM */}
+        <div className="space-y-1.5">
+          <label htmlFor="numero" className="block text-sm font-medium text-foreground">
+            Numéro IM
+          </label>
+          <input
+            id="numero"
+            name="numero"
+            type="text"
+            placeholder="ex: 123456"
+            required
+            className="w-full rounded-lg border border-input bg-background px-3.5 py-2.5 text-sm shadow-sm outline-none ring-0 transition placeholder:text-muted-foreground focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20"
+          />
+        </div>
+
+        {/* Mot de passe */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <label htmlFor="password" className="block text-sm font-medium text-foreground">
+              Mot de passe
+            </label>
+            <a href="#" className="text-xs text-amber-700 hover:underline dark:text-amber-500">
+              Mot de passe oublié ?
+            </a>
+          </div>
+          <div className="relative">
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              required
+              className="w-full rounded-lg border border-input bg-background px-3.5 py-2.5 text-sm shadow-sm outline-none transition placeholder:text-muted-foreground focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Erreur */}
+        {error && (
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950/30 dark:text-red-400">
+            {error}
+          </p>
+        )}
+
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={mutation.isPending}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-amber-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-800 disabled:opacity-60 dark:bg-amber-600 dark:hover:bg-amber-700"
+        >
+          {mutation.isPending && <Loader2 className="size-4 animate-spin" />}
+          {mutation.isPending ? "Connexion…" : "Se connecter"}
+        </button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        Pas encore de compte ?{" "}
+        <Link to="/register" className="font-medium text-amber-700 hover:underline dark:text-amber-500">
+          S'inscrire
+        </Link>
+      </p>
     </div>
   )
 }
