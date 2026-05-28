@@ -16,21 +16,31 @@ import { useAuthStore } from "./store/useAuthStore"
 function App() {
   useInitAuth()
   const user = useAuthStore((state) => state.user)
+
   return (
-    <div className="grid h-screen grid-rows-[auto_fr]">
+    <div
+      className="flex min-h-screen flex-col"
+      style={{ background: "#F0F4FF", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+    >
       <Navbar />
-      <div className="h-full pt-20">
+
+      {/* Content pushed below fixed navbar (height 62px) */}
+      <main className="flex-1" style={{ paddingTop: 62 }}>
         <Routes>
           <Route path="/" element={<Home />} />
+
           <Route
             path="/upload"
-            element={user ? <UploadForm /> : <Navigate to="/login" replace />}
+            element={<UploadForm />}
           />
+
           <Route path="/stats" element={<Stats />} />
+
           <Route
             path="/chatbot"
             element={user ? <Chatbot /> : <Navigate to="/login" replace />}
           />
+
           <Route
             path="/dashboard"
             element={
@@ -39,40 +49,35 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/documents"
             element={user ? <DocumentList /> : <Navigate to="/login" replace />}
           />
+
           <Route
             path="/documents/:id"
             element={user ? <TexteDetails /> : <Navigate to="/login" replace />}
           />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+
+          <Route path="/login" element={<AuthPage><LoginForm /></AuthPage>} />
+          <Route path="/register" element={<AuthPage><RegisterForm /></AuthPage>} />
         </Routes>
-      </div>
+      </main>
     </div>
   )
 }
 
-const RegisterPage = () => {
-  return (
-    <div className="flex h-full w-full justify-center">
-      <div className="flex h-full max-w-lg items-center justify-center gap-6 rounded-xl p-6 md:p-10">
-        <RegisterForm />
-      </div>
+/** Centered wrapper for login / register pages */
+const AuthPage = ({ children }: { children: React.ReactNode }) => (
+  <div className="flex min-h-full w-full items-center justify-center px-4 py-12">
+    <div
+      className="w-full max-w-md rounded-[16px] border bg-white p-8 shadow-sm"
+      style={{ borderColor: "#E4E9F7" }}
+    >
+      {children}
     </div>
-  )
-}
-
-const LoginPage = () => {
-  return (
-    <div className="flex h-full w-full justify-center">
-      <div className="flex h-full max-w-lg items-center justify-center gap-6 rounded-xl p-6 md:p-10">
-        <LoginForm />
-      </div>
-    </div>
-  )
-}
+  </div>
+)
 
 export default App
