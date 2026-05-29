@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { useMutation } from "@tanstack/react-query"
 import api, { setAccessToken } from "@/api/api"
 import { useAuthStore } from "@/store/useAuthStore"
+import type { UserRole } from "@/store/useAuthStore"
 import type { FormEvent } from "react"
 import { useState } from "react"
 import { Eye, EyeOff, Loader2, Sparkles } from "lucide-react"
@@ -59,25 +60,52 @@ const FieldInput = ({
   </div>
 )
 
+type LoginResponse = {
+  access_token: string
+  role: UserRole
+}
+
 export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
   const navigate = useNavigate()
   const setUser = useAuthStore((s) => s.setUser)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const mutation = useMutation({
-    mutationFn: async (data: { numero: string; password: string }) => {
-      const response = await api.post("/login", data)
+  const mutation = useMutation<LoginResponse, Error, { numero: string; password: string }>({
+    mutationFn: async (data) => {
+      // axios rejette sur 4xx/5xx → onError sera bien appelé
+      const response = await api.post<LoginResponse>("/login", data)
       return response.data
     },
+
     onSuccess: async (data) => {
+      // /login retourne déjà role — pas besoin d'un second appel /me
       setAccessToken(data.access_token)
-      const meRes = await api.get("/me")
-      setUser({ numero: meRes.data.numero })
-      navigate("/dashboard")
+
+      // On appelle quand même /me pour récupérer username (optionnel mais propre)
+      try {
+        const meRes = await api.get("/api/me")
+        setUser({
+          numero:   meRes.data.numero,
+          username: meRes.data.username,
+          role:     meRes.data.role,
+        })
+      } catch {
+        // Fallback : on utilise ce que /login nous a donné
+        setUser({ numero: "", role: data.role })
+      }
+
+      navigate("/dashboard", { replace: true })
     },
-    onError: () => {
-      setError("Numéro ou mot de passe incorrect.")
+
+    onError: (err: any) => {
+      // isPending repasse à false automatiquement → l'animation s'arrête
+      const status = err?.response?.status
+      if (status === 401) {
+        setError("Numéro ou mot de passe incorrect.")
+      } else {
+        setError("Une erreur est survenue. Veuillez réessayer.")
+      }
     },
   })
 
@@ -86,7 +114,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
     setError(null)
     const form = new FormData(e.currentTarget)
     mutation.mutate({
-      numero: form.get("numero") as string,
+      numero:   form.get("numero") as string,
       password: form.get("password") as string,
     })
   }
@@ -125,12 +153,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
           >
             Numéro IM
           </label>
-          <FieldInput
-            id="numero"
-            name="numero"
-            placeholder="ex : 123456"
-            required
-          />
+          <FieldInput id="numero" name="numero" placeholder="ex : 123456" required />
         </div>
 
         {/* Mot de passe */}
@@ -190,9 +213,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
           onMouseEnter={(e) =>
             !mutation.isPending && (e.currentTarget.style.background = "#3D6EE5")
           }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.background = "#4F7EF7")
-          }
+          onMouseLeave={(e) => (e.currentTarget.style.background = "#4F7EF7")}
         >
           {mutation.isPending && <Loader2 className="size-4 animate-spin" />}
           {mutation.isPending ? "Connexion…" : "Se connecter"}
@@ -202,9 +223,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
       {/* Divider */}
       <div className="my-6 flex items-center gap-3">
         <div className="h-px flex-1" style={{ background: "#E4E9F7" }} />
-        <span className="text-[11px] font-semibold" style={{ color: "#B0B8D0" }}>
-          ou
-        </span>
+        <span className="text-[11px] font-semibold" style={{ color: "#B0B8D0" }}>ou</span>
         <div className="h-px flex-1" style={{ background: "#E4E9F7" }} />
       </div>
 

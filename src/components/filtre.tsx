@@ -1,19 +1,17 @@
-import { Input } from "@/components/ui/input"
-import { Calendar } from "@/components/ui/calendar"
+import { Search, X, Check, ListFilter } from "lucide-react"
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { CalendarDays, Search, X, SlidersHorizontal } from "lucide-react"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import type { CategorieType, StatutType, ThemeType } from "@/types"
 import { useFiltre } from "@/store/useFiltre"
+import { useState } from "react"
 
 type FiltreProps = {
   dataCategories: CategorieType[]
@@ -21,312 +19,356 @@ type FiltreProps = {
   dataThemes: ThemeType[]
 }
 
-const inputBase: React.CSSProperties = {
-  height: 38,
-  border: "1.5px solid #E4E9F7",
-  borderRadius: 10,
-  fontFamily: "'Plus Jakarta Sans', sans-serif",
-  fontSize: 13,
-  color: "#1A1D2E",
-  background: "#fff",
-  outline: "none",
-  padding: "0 12px",
+const statutColors: Record<string, { bg: string; text: string; dot: string }> = {
+  "En projet":  { bg: "#FAEEDA", text: "#854F0B", dot: "#BA7517" },
+  "En vigueur": { bg: "#E6F9F1", text: "#0F6E56", dot: "#1D9E75" },
+  "Abrogé":     { bg: "#FDECEA", text: "#A32D2D", dot: "#E24B4A" },
 }
 
-const SelectField = ({
-  label,
-  value,
-  onChange,
-  options,
-  defaultLabel,
-  defaultValue,
-}: {
-  label: string
-  value: string | undefined
-  onChange: (val: string) => void
-  options: { id: number | string; nom: string }[]
-  defaultLabel: string
-  defaultValue: string
-}) => (
-  <div className="flex flex-col gap-1">
-    <label
-      className="text-[10px] font-bold uppercase tracking-[0.18em]"
-      style={{ color: "#8892B0" }}
-    >
-      {label}
-    </label>
-    <div className="relative">
-      <select
-        value={value ?? defaultValue}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full appearance-none cursor-pointer transition-colors focus:outline-none"
-        style={{
-          ...inputBase,
-          paddingRight: 32,
-          minWidth: 148,
-        }}
-        onFocus={(e) => (e.currentTarget.style.borderColor = "#4F7EF7")}
-        onBlur={(e) => (e.currentTarget.style.borderColor = "#E4E9F7")}
-      >
-        <option value={defaultValue}>{defaultLabel}</option>
-        {options.map((opt) => (
-          <option key={opt.id} value={opt.nom}>
-            {opt.nom}
-          </option>
-        ))}
-      </select>
-      <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center">
-        <svg className="h-3 w-3" fill="none" viewBox="0 0 12 8" style={{ color: "#8892B0" }}>
-          <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </div>
-    </div>
-  </div>
+const CURRENT_YEAR = new Date().getFullYear()
+const YEARS = Array.from({ length: CURRENT_YEAR - 1989 }, (_, i) => CURRENT_YEAR - i)
+
+// Decade groupings for year sub-sub-menus
+const DECADES = Array.from(
+  { length: Math.ceil((CURRENT_YEAR - 1989) / 10) },
+  (_, i) => {
+    const start = CURRENT_YEAR - i * 10
+    const end = Math.max(start - 9, 1990)
+    return { label: `${end} – ${start}`, years: Array.from({ length: start - end + 1 }, (_, j) => start - j) }
+  }
 )
 
-const DateButton = ({
-  label,
-  date,
-  title,
-  description,
-  onSelect,
-  onClear,
-}: {
-  label: string
-  date: Date | undefined
-  title: string
-  description: string
-  onSelect: (d: Date | undefined) => void
-  onClear: () => void
-}) => {
-  const formatted = date
-    ? `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1)
-        .toString()
-        .padStart(2, "0")}/${date.getFullYear()}`
-    : null
-
-  return (
-    <div className="flex flex-col gap-1">
-      <label
-        className="text-[10px] font-bold uppercase tracking-[0.18em]"
-        style={{ color: "#8892B0" }}
-      >
-        {label}
-      </label>
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <button
-            className="flex items-center justify-between gap-3 transition-colors focus:outline-none"
-            style={{ ...inputBase, minWidth: 148, paddingRight: 12 }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = "#4F7EF7")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "#E4E9F7")}
-          >
-            <span style={{ color: formatted ? "#1A1D2E" : "#B0B8D0" }}>
-              {formatted ?? "Sélectionner"}
-            </span>
-            <CalendarDays className="size-3.5 shrink-0" style={{ color: "#8892B0" }} />
-          </button>
-        </AlertDialogTrigger>
-        <AlertDialogContent className="max-w-sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-base font-semibold">{title}</AlertDialogTitle>
-            <AlertDialogDescription className="text-sm" style={{ color: "#6B7290" }}>
-              {description}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="flex w-full justify-center">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={onSelect}
-              className="rounded-xl border"
-              captionLayout="dropdown"
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={onClear} className="text-sm">
-              Effacer
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className="text-sm text-white"
-              style={{ background: "#4F7EF7" }}
-            >
-              Valider
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  )
+const subContentStyle: React.CSSProperties = {
+  borderColor: "#E4E9F7",
+  boxShadow: "0 12px 32px rgba(30,40,100,0.10)",
+  fontFamily: "'Plus Jakarta Sans', sans-serif",
+  borderRadius: 14,
+  padding: "6px",
+  minWidth: 200,
+  background: "#fff",
 }
 
-export const Filtre = ({ dataCategories, dataStatuts, dataThemes }: FiltreProps) => {
-  const {
-    categorie,
-    statut,
-    theme,
-    mots_cles,
-    date_debut,
-    date_fin,
-    updateCategorie,
-    updateStatut,
-    updateTheme,
-    updateDateDebut,
-    updateDateFin,
-    updateMotsCles,
-  } = useFiltre()
+const menuItemBase =
+  "flex cursor-pointer items-center gap-2.5 rounded-[9px] px-3 py-2 text-[12.5px] font-semibold transition-colors outline-none focus:bg-[#F5F7FF] data-[highlighted]:bg-[#F5F7FF]"
 
-  const hasActiveFilters =
+const CheckIcon = ({ visible }: { visible: boolean }) => (
+  <Check
+    className="size-3.5 shrink-0"
+    style={{ opacity: visible ? 1 : 0, color: "#4F7EF7" }}
+  />
+)
+
+const ActivePill = ({ label, color }: { label: string; color?: { bg: string; text: string; dot: string } }) =>
+  color ? (
+    <span
+      className="ml-auto inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold"
+      style={{ background: color.bg, color: color.text }}
+    >
+      <span className="size-1.5 rounded-full shrink-0" style={{ background: color.dot }} />
+      {label}
+    </span>
+  ) : (
+    <span
+      className="ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold"
+      style={{ background: "#EBF2FF", color: "#185FA5" }}
+    >
+      {label}
+    </span>
+  )
+
+export const Filtre = ({ dataCategories, dataStatuts, dataThemes }: FiltreProps) => {
+  const { categorie, statut, mots_cles, updateCategorie, updateStatut, updateMotsCles } = useFiltre()
+  const [annee, setAnnee] = useState<string | undefined>(undefined)
+
+  const hasFilters =
     (categorie && categorie !== "toutes_les_categories") ||
     (statut && statut !== "tous_les_statuts") ||
-    (theme && theme !== "tous_les_themes") ||
-    mots_cles ||
-    date_debut ||
-    date_fin
+    !!mots_cles ||
+    !!annee
 
   const clearAll = () => {
     updateCategorie("toutes_les_categories")
     updateStatut("tous_les_statuts")
-    updateTheme("tous_les_themes")
     updateMotsCles(undefined)
-    updateDateDebut(undefined)
-    updateDateFin(undefined)
+    setAnnee(undefined)
   }
+
+  const activeParts: string[] = []
+  if (categorie && categorie !== "toutes_les_categories") activeParts.push(categorie)
+  if (statut && statut !== "tous_les_statuts") activeParts.push(statut)
+  if (annee) activeParts.push(annee)
+
+  const statutMeta = statut && statut !== "tous_les_statuts" ? statutColors[statut] : undefined
+  const anneeMeta = annee
 
   return (
     <div
-      className="rounded-[14px] border bg-white p-5"
-      style={{ borderColor: "#E4E9F7", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+      className="flex flex-wrap items-center gap-2.5"
+      style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
     >
-      {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className="size-4" style={{ color: "#4F7EF7" }} />
-          <span className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: "#8892B0" }}>
-            Filtres
-          </span>
-        </div>
-        {hasActiveFilters && (
+      {/* ── Search field ── */}
+      <div
+        className="group flex flex-1 min-w-55 items-center gap-2.5 rounded-[11px] px-3.5 transition-all duration-150"
+        style={{
+          height: 42,
+          border: `1.5px solid ${mots_cles ? "#4F7EF7" : "#E2E8F4"}`,
+          background: mots_cles ? "#EBF2FF" : "#FAFBFF",
+          boxShadow: mots_cles ? "0 0 0 3px #EBF2FF" : "none",
+        }}
+        onFocusCapture={(e) => {
+          e.currentTarget.style.borderColor = "#4F7EF7"
+          e.currentTarget.style.boxShadow = "0 0 0 3px #EBF2FF"
+          e.currentTarget.style.background = "#EBF2FF"
+        }}
+        onBlurCapture={(e) => {
+          if (!mots_cles) {
+            e.currentTarget.style.borderColor = "#E2E8F4"
+            e.currentTarget.style.boxShadow = "none"
+            e.currentTarget.style.background = "#FAFBFF"
+          }
+        }}
+      >
+        <Search className="size-3.5 shrink-0" style={{ color: mots_cles ? "#4F7EF7" : "#A0ABBC" }} />
+        <input
+          placeholder="Rechercher un document…"
+          value={mots_cles ?? ""}
+          onChange={(e) => updateMotsCles(e.target.value || undefined)}
+          className="flex-1 bg-transparent text-[13px] font-medium outline-none placeholder:text-[#B8C0D0]"
+          style={{ color: "#1A1D2E" }}
+        />
+        {mots_cles && (
           <button
-            onClick={clearAll}
-            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all hover:bg-red-50 hover:text-red-500"
-            style={{ color: "#8892B0" }}
+            onClick={() => updateMotsCles(undefined)}
+            className="flex size-5 items-center justify-center rounded-full hover:bg-[#D6E6FF] transition-colors"
           >
-            <X className="size-3" />
-            Réinitialiser
+            <X className="size-3" style={{ color: "#4F7EF7" }} />
           </button>
         )}
       </div>
 
-      {/* Fields */}
-      <div className="flex flex-wrap gap-3">
-        {/* Mots clés */}
-        <div className="flex min-w-[160px] flex-1 flex-col gap-1">
-          <label
-            className="text-[10px] font-bold uppercase tracking-[0.18em]"
-            style={{ color: "#8892B0" }}
-          >
-            Mots clés
-          </label>
-          <div className="relative">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2"
-              style={{ color: "#8892B0" }}
-            />
-            <Input
-              placeholder="Rechercher…"
-              value={mots_cles ?? ""}
-              onChange={(e) => updateMotsCles(e.target.value || undefined)}
-              className="pl-9 focus-visible:ring-0"
-              style={{
-                ...inputBase,
-                paddingLeft: 36,
-                width: "100%",
-                height: 38,
-              }}
-            />
-          </div>
-        </div>
-
-        <SelectField
-          label="Catégorie"
-          value={categorie}
-          onChange={updateCategorie}
-          options={dataCategories.map((c) => ({ id: c.id, nom: c.nom ?? "" }))}
-          defaultLabel="Toutes les catégories"
-          defaultValue="toutes_les_categories"
-        />
-
-        <SelectField
-          label="Thème"
-          value={theme}
-          onChange={updateTheme}
-          options={dataThemes.map((t) => ({ id: t.id, nom: t.nom ?? "" }))}
-          defaultLabel="Tous les thèmes"
-          defaultValue="tous_les_themes"
-        />
-
-        <SelectField
-          label="Statut"
-          value={statut}
-          onChange={updateStatut}
-          options={dataStatuts.map((s) => ({ id: s.id, nom: s.nom ?? "" }))}
-          defaultLabel="Tous les statuts"
-          defaultValue="tous_les_statuts"
-        />
-
-        <DateButton
-          label="Du"
-          date={date_debut}
-          title="Date de début"
-          description="Choisir la date de début"
-          onSelect={updateDateDebut}
-          onClear={() => updateDateDebut(undefined)}
-        />
-
-        <DateButton
-          label="Au"
-          date={date_fin}
-          title="Date de fin"
-          description="Choisir la date de fin"
-          onSelect={updateDateFin}
-          onClear={() => updateDateFin(undefined)}
-        />
-
-        {/* Année */}
-        <div className="flex flex-col gap-1">
-          <label
-            className="text-[10px] font-bold uppercase tracking-[0.18em]"
-            style={{ color: "#8892B0" }}
-          >
-            Année
-          </label>
-          <div className="relative">
-            <select
-              className="w-full appearance-none cursor-pointer transition-colors focus:outline-none"
-              style={{ ...inputBase, minWidth: 130, paddingRight: 32 }}
-              defaultValue="toutes_les_annees"
-              onFocus={(e) => (e.currentTarget.style.borderColor = "#4F7EF7")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#E4E9F7")}
+      {/* ── Active filter pills (outside dropdown) ── */}
+      {activeParts.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {categorie && categorie !== "toutes_les_categories" && (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full pl-2.5 pr-1.5 py-1 text-[11px] font-bold"
+              style={{ background: "#EBF2FF", color: "#185FA5" }}
             >
-              <option value="toutes_les_annees">Toutes les années</option>
-              {Array.from({ length: new Date().getFullYear() - 1989 }).map((_, i) => {
-                const year = new Date().getFullYear() - i
-                return (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                )
-              })}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center">
-              <svg className="h-3 w-3" fill="none" viewBox="0 0 12 8" style={{ color: "#8892B0" }}>
-                <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </div>
-          </div>
+              {categorie}
+              <button
+                onClick={() => updateCategorie("toutes_les_categories")}
+                className="flex size-4 items-center justify-center rounded-full hover:bg-[#C5D9FF] transition-colors"
+              >
+                <X className="size-2.5" style={{ color: "#4F7EF7" }} />
+              </button>
+            </span>
+          )}
+          {statut && statut !== "tous_les_statuts" && statutMeta && (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full pl-2.5 pr-1.5 py-1 text-[11px] font-bold"
+              style={{ background: statutMeta.bg, color: statutMeta.text }}
+            >
+              <span className="size-1.5 rounded-full shrink-0" style={{ background: statutMeta.dot }} />
+              {statut}
+              <button
+                onClick={() => updateStatut("tous_les_statuts")}
+                className="flex size-4 items-center justify-center rounded-full transition-colors hover:opacity-70"
+              >
+                <X className="size-2.5" style={{ color: statutMeta.text }} />
+              </button>
+            </span>
+          )}
+          {annee && (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full pl-2.5 pr-1.5 py-1 text-[11px] font-bold"
+              style={{ background: "#F0EDFF", color: "#5B21B6" }}
+            >
+              {annee}
+              <button
+                onClick={() => setAnnee(undefined)}
+                className="flex size-4 items-center justify-center rounded-full hover:bg-[#DDD6FE] transition-colors"
+              >
+                <X className="size-2.5" style={{ color: "#5B21B6" }} />
+              </button>
+            </span>
+          )}
         </div>
-      </div>
+      )}
+
+      {/* ── Dropdown trigger ── */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            className="flex items-center gap-2 rounded-[11px] px-4 text-[13px] font-semibold transition-all duration-150 focus:outline-none"
+            style={{
+              height: 42,
+              border: `1.5px solid ${hasFilters ? "#4F7EF7" : "#E2E8F4"}`,
+              background: hasFilters ? "#4F7EF7" : "#FAFBFF",
+              color: hasFilters ? "#fff" : "#1A1D2E",
+              boxShadow: hasFilters ? "0 2px 12px rgba(79,126,247,0.25)" : "none",
+            }}
+          >
+            <ListFilter className="size-3.5 shrink-0" />
+            Filtres
+            {hasFilters && (
+              <span
+                className="flex size-5 items-center justify-center rounded-full text-[10px] font-bold"
+                style={{ background: "rgba(255,255,255,0.25)", color: "#fff" }}
+              >
+                {activeParts.length}
+              </span>
+            )}
+          </button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent
+          align="end"
+          sideOffset={6}
+          style={{ ...subContentStyle, minWidth: 230 }}
+        >
+          {/* ── Section: Catégorie > Statut (nested hover) ── */}
+          <p className="px-3 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#A0ABBC" }}>
+            Catégorie
+          </p>
+
+          {/* Toutes */}
+          <DropdownMenuItem
+            onClick={() => { updateCategorie("toutes_les_categories"); updateStatut("tous_les_statuts") }}
+            className={menuItemBase}
+            style={{ color: !categorie || categorie === "toutes_les_categories" ? "#4F7EF7" : "#1A1D2E" }}
+          >
+            <CheckIcon visible={!categorie || categorie === "toutes_les_categories"} />
+            Toutes les catégories
+          </DropdownMenuItem>
+
+          {/* Each category → hover reveals statut sub-menu */}
+          {dataCategories.map((cat) => (
+            <DropdownMenuSub key={cat.id}>
+              <DropdownMenuSubTrigger
+                className={menuItemBase}
+                style={{ color: categorie === cat.nom ? "#185FA5" : "#1A1D2E" }}
+                onClick={() => updateCategorie(cat.nom ?? "")}
+              >
+                <CheckIcon visible={categorie === cat.nom} />
+                <span
+                  className="mr-1 inline-block shrink-0 rounded-sm"
+                  style={{ width: 3, height: 14, background: categorie === cat.nom ? "#4F7EF7" : "#D8E0F0" }}
+                />
+                {cat.nom}
+                {categorie === cat.nom && statutMeta && (
+                  <ActivePill label={statut!} color={statutMeta} />
+                )}
+              </DropdownMenuSubTrigger>
+
+              <DropdownMenuSubContent style={subContentStyle}>
+                <p className="px-3 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#A0ABBC" }}>
+                  Statut
+                </p>
+                <DropdownMenuItem
+                  onClick={() => { updateCategorie(cat.nom ?? ""); updateStatut("tous_les_statuts") }}
+                  className={menuItemBase}
+                  style={{ color: !statut || statut === "tous_les_statuts" ? "#4F7EF7" : "#1A1D2E" }}
+                >
+                  <CheckIcon visible={!statut || statut === "tous_les_statuts"} />
+                  Tous les statuts
+                </DropdownMenuItem>
+
+                {dataStatuts.map((s) => {
+                  const meta = s.nom ? statutColors[s.nom] : undefined
+                  return (
+                    <DropdownMenuItem
+                      key={s.id}
+                      onClick={() => { updateCategorie(cat.nom ?? ""); updateStatut(s.nom ?? "") }}
+                      className={menuItemBase}
+                      style={{ color: statut === s.nom ? "#185FA5" : "#1A1D2E" }}
+                    >
+                      <CheckIcon visible={statut === s.nom} />
+                      {meta ? (
+                        <span
+                          className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold"
+                          style={{ background: meta.bg, color: meta.text }}
+                        >
+                          <span className="size-1.5 shrink-0 rounded-full" style={{ background: meta.dot }} />
+                          {s.nom}
+                        </span>
+                      ) : s.nom}
+                    </DropdownMenuItem>
+                  )
+                })}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          ))}
+
+          <DropdownMenuSeparator className="my-1.5 bg-[#F0F4FF]" />
+
+          {/* ── Section: Année > décennie > années ── */}
+          <p className="px-3 pb-1 pt-0.5 text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#A0ABBC" }}>
+            Année
+          </p>
+
+          <DropdownMenuItem
+            onClick={() => setAnnee(undefined)}
+            className={menuItemBase}
+            style={{ color: !annee ? "#4F7EF7" : "#1A1D2E" }}
+          >
+            <CheckIcon visible={!annee} />
+            Toutes les années
+          </DropdownMenuItem>
+
+          {DECADES.map((decade) => (
+            <DropdownMenuSub key={decade.label}>
+              <DropdownMenuSubTrigger
+                className={menuItemBase}
+                style={{ color: decade.years.some((y) => String(y) === annee) ? "#5B21B6" : "#1A1D2E" }}
+              >
+                <span
+                  className="size-3.5 shrink-0 rounded"
+                  style={{
+                    background: decade.years.some((y) => String(y) === annee) ? "#EDE9FE" : "transparent",
+                    border: "1.5px solid",
+                    borderColor: decade.years.some((y) => String(y) === annee) ? "#A78BFA" : "#D8E0F0",
+                  }}
+                />
+                {decade.label}
+                {decade.years.some((y) => String(y) === annee) && (
+                  <ActivePill label={annee!} />
+                )}
+              </DropdownMenuSubTrigger>
+
+              <DropdownMenuSubContent style={{ ...subContentStyle, minWidth: 130 }}>
+                {decade.years.map((year) => (
+                  <DropdownMenuItem
+                    key={year}
+                    onClick={() => setAnnee(String(year))}
+                    className={menuItemBase}
+                    style={{ color: annee === String(year) ? "#5B21B6" : "#1A1D2E" }}
+                  >
+                    <Check
+                      className="size-3.5 shrink-0"
+                      style={{ opacity: annee === String(year) ? 1 : 0, color: "#7C3AED" }}
+                    />
+                    {year}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          ))}
+
+          {/* ── Reset ── */}
+          {hasFilters && (
+            <>
+              <DropdownMenuSeparator className="my-1.5 bg-[#F0F4FF]" />
+              <DropdownMenuItem
+                onClick={clearAll}
+                className="flex cursor-pointer items-center gap-2.5 rounded-[9px] px-3 py-2 text-[12.5px] font-semibold text-red-400 transition-colors hover:bg-red-50 hover:text-red-500 focus:bg-red-50 focus:text-red-500"
+              >
+                <X className="size-3.5" />
+                Réinitialiser les filtres
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }

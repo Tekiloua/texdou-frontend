@@ -250,7 +250,7 @@ export default function AdminDashboard() {
             {STATS.map(({ value, label, icon: Icon, color, bg }) => (
               <div
                 key={label}
-                className="flex flex-col gap-3 rounded-[16px] border bg-white p-5"
+                className="flex flex-col gap-3 rounded-2xl border bg-white p-5"
                 style={{ borderColor: C.border }}
               >
                 <div
@@ -270,7 +270,7 @@ export default function AdminDashboard() {
           {/* Deux colonnes */}
           <div className="grid gap-5 lg:grid-cols-2">
             {/* Nouveaux documents */}
-            <div className="rounded-[16px] border bg-white" style={{ borderColor: C.border }}>
+            <div className="rounded-2xl border bg-white" style={{ borderColor: C.border }}>
               <div
                 className="flex items-center justify-between border-b px-5 py-4"
                 style={{ borderColor: C.border }}
@@ -304,7 +304,7 @@ export default function AdminDashboard() {
                 ) : newDocs.map((doc) => (
                   <div key={doc.id} className="flex items-start gap-3 px-5 py-4">
                     <div
-                      className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-[8px]"
+                      className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl"
                       style={{ background: C.bluePale }}
                     >
                       <FileText className="size-4" style={{ color: C.blue }} />
@@ -325,7 +325,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Derniers utilisateurs */}
-            <div className="rounded-[16px] border bg-white" style={{ borderColor: C.border }}>
+            <div className="rounded-2xl border bg-white" style={{ borderColor: C.border }}>
               <div
                 className="flex items-center justify-between border-b px-5 py-4"
                 style={{ borderColor: C.border }}
@@ -363,7 +363,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Actions rapides */}
-          <div className="rounded-[16px] border bg-white p-5" style={{ borderColor: C.border }}>
+          <div className="rounded-2xl border bg-white p-5" style={{ borderColor: C.border }}>
             <p className="mb-3 text-sm font-bold" style={{ color: C.ink }}>Actions rapides</p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -441,7 +441,7 @@ export default function AdminDashboard() {
           )}
 
           {/* Table */}
-          <div className="overflow-hidden rounded-[16px] border bg-white" style={{ borderColor: C.border }}>
+          <div className="overflow-hidden rounded-2xl border bg-white" style={{ borderColor: C.border }}>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -475,12 +475,12 @@ export default function AdminDashboard() {
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div
-                            className="flex size-8 shrink-0 items-center justify-center rounded-[8px]"
+                            className="flex size-8 shrink-0 items-center justify-center rounded-xl"
                             style={{ background: C.bluePale }}
                           >
                             <FileText className="size-4" style={{ color: C.blue }} />
                           </div>
-                          <span className="max-w-[220px] truncate font-semibold" style={{ color: C.ink }}>
+                          <span className="max-w-55 truncate font-semibold" style={{ color: C.ink }}>
                             {doc.title}
                           </span>
                         </div>
@@ -582,7 +582,7 @@ export default function AdminDashboard() {
             {filteredUsers.map((u) => (
               <div
                 key={u.id}
-                className="group rounded-[16px] border bg-white p-5 transition-all"
+                className="group rounded-2xl border bg-white p-5 transition-all"
                 style={{ borderColor: C.border }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = C.blue
@@ -619,13 +619,13 @@ export default function AdminDashboard() {
                 {/* Infos */}
                 <div className="mb-3 flex flex-wrap gap-2">
                   <div
-                    className="flex items-center gap-1.5 rounded-[8px] px-2.5 py-1.5 text-xs font-semibold"
+                    className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold"
                     style={{ background: C.bluePale, color: C.blue }}
                   >
                     <Shield className="size-3" /> {u.numero}
                   </div>
                   <div
-                    className="flex items-center gap-1.5 rounded-[8px] px-2.5 py-1.5 text-xs font-semibold"
+                    className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold"
                     style={{ background: C.amberPale, color: C.amber }}
                   >
                     <FileText className="size-3" /> {u.docs} docs

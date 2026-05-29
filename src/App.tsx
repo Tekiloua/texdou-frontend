@@ -12,10 +12,29 @@ import ProtectedRoute from "./components/protected-route"
 import Home from "./components/home"
 import { useInitAuth } from "./auth/useInitAuth"
 import { useAuthStore } from "./store/useAuthStore"
+import NotificationPanel from "./components/notification"
+import PDFStats from "./components/pdf-stat"
 
 function App() {
   useInitAuth()
-  const user = useAuthStore((state) => state.user)
+  const { user, isInitializing } = useAuthStore()
+
+  // On attend que le refresh initial soit terminé avant de rendre les routes.
+  // Sans ça, React voit user=null pendant ~200ms et redirige vers /login
+  // même si l'utilisateur est bien connecté (F5, retour d'onglet...).
+  if (isInitializing) {
+    return (
+      <div
+        className="flex min-h-screen items-center justify-center"
+        style={{ background: "#F0F4FF" }}
+      >
+        <div
+          className="h-8 w-8 animate-spin rounded-full border-4"
+          style={{ borderColor: "#E4E9F7", borderTopColor: "#4F7EF7" }}
+        />
+      </div>
+    )
+  }
 
   return (
     <div
@@ -24,55 +43,94 @@ function App() {
     >
       <Navbar />
 
-      {/* Content pushed below fixed navbar (height 62px) */}
       <main className="flex-1" style={{ paddingTop: 62 }}>
         <Routes>
+          {/* ── Publiques ─────────────────────────────────────────── */}
           <Route path="/" element={<Home />} />
+          <Route path="/login"    element={<AuthPage><LoginForm /></AuthPage>} />
+          <Route path="/register" element={<AuthPage><RegisterForm /></AuthPage>} />
 
-          <Route
-            path="/upload"
-            element={<UploadForm />}
-          />
-
-          <Route path="/stats" element={<Stats />} />
-
+          {/* ── Protégées (tout utilisateur connecté) ─────────────── */}
           <Route
             path="/chatbot"
-            element={user ? <Chatbot /> : <Navigate to="/login" replace />}
+            element={
+              <ProtectedRoute>
+                <Chatbot />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/documents"
+            element={
+              <ProtectedRoute>
+                <DocumentList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/documents/:id"
+            element={
+              <ProtectedRoute>
+                <TexteDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/stats"
+            element={
+              <ProtectedRoute>
+                <Stats />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pdf-stats"
+            element={
+              <ProtectedRoute>
+                <PDFStats />
+            //  </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notification"
+            element={
+              <ProtectedRoute>
+                <NotificationPanel />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/upload"
+            element={
+              <ProtectedRoute>
+                <UploadForm />
+              </ProtectedRoute>
+            }
           />
 
+          {/* ── Protégée + rôle admin/expert (géré dans ProtectedRoute) ── */}
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="expert">
                 <Dashboard />
               </ProtectedRoute>
             }
           />
 
-          <Route
-            path="/documents"
-            element={user ? <DocumentList /> : <Navigate to="/login" replace />}
-          />
-
-          <Route
-            path="/documents/:id"
-            element={user ? <TexteDetails /> : <Navigate to="/login" replace />}
-          />
-
-          <Route path="/login" element={<AuthPage><LoginForm /></AuthPage>} />
-          <Route path="/register" element={<AuthPage><RegisterForm /></AuthPage>} />
+          {/* ── Fallback ──────────────────────────────────────────── */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
     </div>
   )
 }
 
-/** Centered wrapper for login / register pages */
+/** Wrapper centré pour les pages login / register */
 const AuthPage = ({ children }: { children: React.ReactNode }) => (
   <div className="flex min-h-full w-full items-center justify-center px-4 py-12">
     <div
-      className="w-full max-w-md rounded-[16px] border bg-white p-8 shadow-sm"
+      className="w-full max-w-md rounded-2xl border bg-white p-8 shadow-sm"
       style={{ borderColor: "#E4E9F7" }}
     >
       {children}

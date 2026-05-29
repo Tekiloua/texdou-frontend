@@ -249,7 +249,7 @@ export const Component = () => {
         selectedFiles.map((file) => {
           const formData = new FormData()
           formData.append("file", file)
-          return axios.post("http://localhost:8000/upload-file", formData, {
+          return axios.post("http://localhost:8000/upload-file-analyse", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           })
         })

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { useMutation } from "@tanstack/react-query"
 import api, { setAccessToken } from "@/api/api"
 import { useAuthStore } from "@/store/useAuthStore"
+import type { UserRole } from "@/store/useAuthStore"
 import type { FormEvent } from "react"
 import { useState } from "react"
 import { Eye, EyeOff, Loader2, Sparkles } from "lucide-react"
@@ -65,29 +66,60 @@ const FieldInput = ({
   </div>
 )
 
+type LoginResponse = {
+  access_token: string
+  role: UserRole
+}
+
 export function RegisterForm({ className, ...props }: React.ComponentProps<"div">) {
   const navigate = useNavigate()
   const setUser = useAuthStore((s) => s.setUser)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const mutation = useMutation({
-    mutationFn: async (data: RegisterData) => {
-      await api.post("/register", data)
-      const loginRes = await api.post("/login", {
-        numero: data.numero,
+  const mutation = useMutation<LoginResponse, Error, RegisterData>({
+    mutationFn: async (data) => {
+      // 1) Créer le compte — rejette sur 400 si numéro déjà utilisé
+      await api.post("/register", {
+        username: data.username,
+        numero:   Number(data.numero),   // le backend attend un int
         password: data.password,
       })
-      return { token: loginRes.data.access_token, numero: data.numero }
+
+      // 2) Login immédiat — retourne { access_token, role }
+      const loginRes = await api.post<LoginResponse>("/login", {
+        numero:   data.numero,
+        password: data.password,
+      })
+      return loginRes.data
     },
-    onSuccess: async ({ token }) => {
-      setAccessToken(token)
-      const meRes = await api.get("/me")
-      setUser({ numero: meRes.data.numero })
-      navigate("/dashboard")
+
+    onSuccess: async (data) => {
+      setAccessToken(data.access_token)
+
+      // Récupère username depuis /me
+      try {
+        const meRes = await api.get("/api/me")
+        setUser({
+          numero:   meRes.data.numero,
+          username: meRes.data.username,
+          role:     meRes.data.role,
+        })
+      } catch {
+        setUser({ numero: "", role: data.role })
+      }
+
+      navigate("/dashboard", { replace: true })
     },
-    onError: () => {
-      setError("Ce numéro est déjà utilisé ou une erreur est survenue.")
+
+    onError: (err: any) => {
+      const status = err?.response?.status
+      const detail = err?.response?.data?.detail
+      if (status === 400 && detail) {
+        setError(detail)
+      } else {
+        setError("Ce numéro est déjà utilisé ou une erreur est survenue.")
+      }
     },
   })
 
@@ -97,7 +129,7 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
     const form = new FormData(e.currentTarget)
     mutation.mutate({
       username: form.get("username") as string,
-      numero: form.get("numero") as string,
+      numero:   form.get("numero") as string,
       password: form.get("password") as string,
     })
   }
@@ -136,12 +168,7 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
           >
             Numéro IM
           </label>
-          <FieldInput
-            id="numero"
-            name="numero"
-            placeholder="ex : 123456"
-            required
-          />
+          <FieldInput id="numero" name="numero" placeholder="ex : 123456" required />
         </div>
 
         {/* Username */}
@@ -153,12 +180,7 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
           >
             Nom d'utilisateur
           </label>
-          <FieldInput
-            id="username"
-            name="username"
-            placeholder="ex : Rakoto"
-            required
-          />
+          <FieldInput id="username" name="username" placeholder="ex : Rakoto" required />
         </div>
 
         {/* Mot de passe */}
@@ -188,7 +210,6 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
               </button>
             }
           />
-          {/* Password hint */}
           <p className="text-[11px] font-medium" style={{ color: "#B0B8D0" }}>
             Minimum 8 caractères recommandés.
           </p>
@@ -223,9 +244,7 @@ export function RegisterForm({ className, ...props }: React.ComponentProps<"div"
       {/* Divider */}
       <div className="my-6 flex items-center gap-3">
         <div className="h-px flex-1" style={{ background: "#E4E9F7" }} />
-        <span className="text-[11px] font-semibold" style={{ color: "#B0B8D0" }}>
-          ou
-        </span>
+        <span className="text-[11px] font-semibold" style={{ color: "#B0B8D0" }}>ou</span>
         <div className="h-px flex-1" style={{ background: "#E4E9F7" }} />
       </div>
 
