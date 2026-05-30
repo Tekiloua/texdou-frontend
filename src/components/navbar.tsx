@@ -261,7 +261,7 @@ export default function Navbar() {
                 label="Texdou AI"
               />
               <CanSee role="admin">
-                <Separator orientation="vertical" className="mx-2 w-4" />
+                <Separator orientation="vertical" className="mx-2" />
                 <NavLink
                   to="/dashboard"
                   active={isActive("/dashboard")}

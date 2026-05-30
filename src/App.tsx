@@ -14,6 +14,7 @@ import { useInitAuth } from "./auth/useInitAuth"
 import { useAuthStore } from "./store/useAuthStore"
 import NotificationPanel from "./components/notification"
 import PDFStats from "./components/pdf-stat"
+import { Chunker } from "./components/chunker"
 
 function App() {
   useInitAuth()
@@ -39,16 +40,34 @@ function App() {
   return (
     <div
       className="flex min-h-screen flex-col"
-      style={{ background: "#F0F4FF", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+      style={{
+        background: "#F0F4FF",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+      }}
     >
       <Navbar />
 
       <main className="flex-1" style={{ paddingTop: 62 }}>
         <Routes>
           {/* ── Publiques ─────────────────────────────────────────── */}
-          <Route path="/" element={<Home />} />
-          <Route path="/login"    element={<AuthPage><LoginForm /></AuthPage>} />
-          <Route path="/register" element={<AuthPage><RegisterForm /></AuthPage>} />
+          {/* <Route path="/" element={<Home />} /> */}
+          <Route path="/" element={<Chunker />} />
+          <Route
+            path="/login"
+            element={
+              <AuthPage>
+                <LoginForm />
+              </AuthPage>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <AuthPage>
+                <RegisterForm />
+              </AuthPage>
+            }
+          />
 
           {/* ── Protégées (tout utilisateur connecté) ─────────────── */}
           <Route
@@ -88,9 +107,19 @@ function App() {
             element={
               <ProtectedRoute>
                 <PDFStats />
-            //  </ProtectedRoute>
+              </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/chunker"
+            element={
+              <ProtectedRoute>
+                <Chunker />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/notification"
             element={

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   FileText,
   Users,
@@ -24,6 +24,7 @@ import {
   UserCircle,
   Clock,
 } from "lucide-react"
+import { fetchStatuts , fetchUsers, fetchLatestDocuments} from "@/api/api"
 
 // ── Palette — identique au reste du projet
 const C = {
@@ -44,7 +45,29 @@ const C = {
   border: "#E4E9F7",
 }
 
-// ── Mock data
+// ── Types
+type UserFromAPI = {
+  id: number
+  numero: string
+  username: string | null
+  role: string
+}
+
+type TexteFromAPI = {
+  id: number
+  titre: string | null
+  numero: string | null
+  date_mise_en_vigueur: string | null
+  statut_id: number | null
+  categorie_id: number | null
+}
+
+type StatsFromAPI = {
+  total_textes: number
+  textes_en_vigueur: number
+}
+
+// ── Mock documents (documents uploadés — non remplacés ici)
 const MOCK_DOCUMENTS = [
   { id: 1, title: "Loi n°2022-014 relative au Code des Douanes", type: "Loi", date: "2024-12-10", status: "new", size: "2.4 MB" },
   { id: 2, title: "Circulaire n°047 – Régimes suspensifs", type: "Circulaire", date: "2024-12-08", status: "new", size: "840 KB" },
@@ -52,21 +75,6 @@ const MOCK_DOCUMENTS = [
   { id: 4, title: "Note de service n°12 – OEA", type: "Note", date: "2024-11-25", status: "active", size: "320 KB" },
   { id: 5, title: "Arrêté n°3310 – Marchandises prohibées", type: "Arrêté", date: "2024-11-18", status: "active", size: "1.2 MB" },
   { id: 6, title: "Circulaire n°039 – Valeur en douane", type: "Circulaire", date: "2024-10-05", status: "active", size: "670 KB" },
-]
-
-const MOCK_USERS = [
-  { id: 1, numero: "USR-0012", nom: "Rakoto Jean-Baptiste", email: "rakoto.jb@gmail.com", joined: "2024-11-01", docs: 14, status: "active" },
-  { id: 2, numero: "USR-0027", nom: "Razafimaharo Hanta", email: "h.razafi@yahoo.fr", joined: "2024-11-15", docs: 7, status: "active" },
-  { id: 3, numero: "USR-0033", nom: "Andriantsoa Paul", email: "p.andriantsoa@customs.mg", joined: "2024-12-01", docs: 3, status: "active" },
-  { id: 4, numero: "USR-0041", nom: "Ratsimbazafy Noro", email: "noro.r@mef.gov.mg", joined: "2024-12-05", docs: 22, status: "active" },
-  { id: 5, numero: "USR-0058", nom: "Ramiandrisoa Claude", email: "c.rami@entreprise.mg", joined: "2024-12-09", docs: 1, status: "inactive" },
-]
-
-const STATS = [
-  { value: "248", label: "Documents officiels", icon: FileText, color: C.blue, bg: C.bluePale },
-  { value: "174", label: "Textes en vigueur", icon: Shield, color: C.teal, bg: C.tealPale },
-  { value: "31", label: "Mises à jour / mois", icon: TrendingUp, color: C.amber, bg: C.amberPale },
-  { value: "58", label: "Utilisateurs actifs", icon: Users, color: C.rose, bg: C.rosePale },
 ]
 
 type Tab = "overview" | "documents" | "users"
@@ -116,7 +124,11 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>("overview")
   const [documents, setDocuments] = useState(MOCK_DOCUMENTS)
-  const [users] = useState(MOCK_USERS)
+  const [users, setUsers] = useState<UserFromAPI[]>([])
+  const [latestTextes, setLatestTextes] = useState<TexteFromAPI[]>([])
+  const [statsData, setStatsData] = useState<StatsFromAPI | null>(null)
+  const [loadingUsers, setLoadingUsers] = useState(true)
+  const [loadingTextes, setLoadingTextes] = useState(true)
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null)
   const [searchDoc, setSearchDoc] = useState("")
   const [searchUser, setSearchUser] = useState("")
@@ -124,6 +136,23 @@ export default function AdminDashboard() {
   const [showDeleteModal, setShowDeleteModal] = useState<number | null>(null)
   const [showResetModal, setShowResetModal] = useState<number | null>(null)
   const [uploadForm, setUploadForm] = useState({ title: "", type: "Loi" })
+
+  // ── Chargement des données depuis l'API
+  useEffect(() => {
+    fetchUsers()
+      .then((data: UserFromAPI[]) => setUsers(data))
+      .catch(() => {/* token absent ou non-admin : on garde le tableau vide */})
+      .finally(() => setLoadingUsers(false))
+
+    fetchLatestDocuments()
+      .then((data: TexteFromAPI[]) => setLatestTextes(data))
+      .catch(() => {})
+      .finally(() => setLoadingTextes(false))
+
+    fetchStatuts()
+      .then((data: StatsFromAPI) => setStatsData(data))
+      .catch(() => {})
+  }, [])
 
   const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToast({ msg, type })
@@ -163,12 +192,14 @@ export default function AdminDashboard() {
   )
 
   const filteredUsers = users.filter((u) =>
-    u.nom.toLowerCase().includes(searchUser.toLowerCase()) ||
+    (u.username ?? "").toLowerCase().includes(searchUser.toLowerCase()) ||
     u.numero.toLowerCase().includes(searchUser.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchUser.toLowerCase())
+    u.role.toLowerCase().includes(searchUser.toLowerCase())
   )
 
   const newDocs = documents.filter((d) => d.status === "new")
+  // Badge "Nouveaux documents" dans l'onglet = derniers textes de l'API
+  const newDocsBadge = latestTextes.length
 
   const NAV_TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "overview", label: "Vue d'ensemble", icon: LayoutDashboard },
@@ -225,7 +256,7 @@ export default function AdminDashboard() {
           >
             <Icon className="size-4 shrink-0" />
             <span className="hidden sm:inline">{label}</span>
-            {id === "documents" && newDocs.length > 0 && (
+            {id === "documents" && newDocsBadge > 0 && (
               <span
                 className="flex size-4 items-center justify-center rounded-full text-[9px] font-bold"
                 style={{
@@ -233,7 +264,7 @@ export default function AdminDashboard() {
                   color: "#fff",
                 }}
               >
-                {newDocs.length}
+                {newDocsBadge}
               </span>
             )}
           </button>
@@ -247,7 +278,28 @@ export default function AdminDashboard() {
         <div className="space-y-6">
           {/* Stats */}
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {STATS.map(({ value, label, icon: Icon, color, bg }) => (
+            {[
+              {
+                value: statsData ? String(statsData.total_textes) : "—",
+                label: "Documents officiels",
+                icon: FileText, color: C.blue, bg: C.bluePale,
+              },
+              {
+                value: statsData ? String(statsData.textes_en_vigueur) : "—",
+                label: "Textes en vigueur",
+                icon: Shield, color: C.teal, bg: C.tealPale,
+              },
+              {
+                value: latestTextes.length > 0 ? String(latestTextes.length) : "—",
+                label: "Derniers ajouts",
+                icon: TrendingUp, color: C.amber, bg: C.amberPale,
+              },
+              {
+                value: loadingUsers ? "…" : String(users.length),
+                label: "Utilisateurs",
+                icon: Users, color: C.rose, bg: C.rosePale,
+              },
+            ].map(({ value, label, icon: Icon, color, bg }) => (
               <div
                 key={label}
                 className="flex flex-col gap-3 rounded-2xl border bg-white p-5"
@@ -277,13 +329,13 @@ export default function AdminDashboard() {
               >
                 <div className="flex items-center gap-2">
                   <Clock className="size-4" style={{ color: C.blue }} />
-                  <span className="text-sm font-bold" style={{ color: C.ink }}>Nouveaux documents</span>
-                  {newDocs.length > 0 && (
+                  <span className="text-sm font-bold" style={{ color: C.ink }}>Derniers textes ajoutés</span>
+                  {newDocsBadge > 0 && (
                     <span
                       className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
                       style={{ background: C.blue }}
                     >
-                      {newDocs.length}
+                      {newDocsBadge}
                     </span>
                   )}
                 </div>
@@ -296,12 +348,16 @@ export default function AdminDashboard() {
                 </button>
               </div>
               <div className="divide-y" style={{ borderColor: C.border }}>
-                {newDocs.length === 0 ? (
+                {loadingTextes ? (
+                  <div className="flex items-center justify-center py-10">
+                    <p className="text-sm font-semibold" style={{ color: C.muted }}>Chargement…</p>
+                  </div>
+                ) : latestTextes.length === 0 ? (
                   <div className="flex flex-col items-center gap-2 py-10 text-center">
                     <CheckCircle2 className="size-8" style={{ color: C.teal }} />
-                    <p className="text-sm font-semibold" style={{ color: C.muted }}>Aucun nouveau document</p>
+                    <p className="text-sm font-semibold" style={{ color: C.muted }}>Aucun document récent</p>
                   </div>
-                ) : newDocs.map((doc) => (
+                ) : latestTextes.map((doc) => (
                   <div key={doc.id} className="flex items-start gap-3 px-5 py-4">
                     <div
                       className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl"
@@ -310,14 +366,18 @@ export default function AdminDashboard() {
                       <FileText className="size-4" style={{ color: C.blue }} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold" style={{ color: C.ink }}>{doc.title}</p>
-                      <p className="text-xs" style={{ color: C.muted }}>{doc.type} · {doc.date}</p>
+                      <p className="truncate text-sm font-semibold" style={{ color: C.ink }}>
+                        {doc.titre ?? `Texte #${doc.id}`}
+                      </p>
+                      <p className="text-xs" style={{ color: C.muted }}>
+                        {doc.numero ?? "—"} · {doc.date_mise_en_vigueur ?? "—"}
+                      </p>
                     </div>
                     <span
                       className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold"
                       style={{ background: C.bluePale, color: C.blue }}
                     >
-                      Nouveau
+                      #{doc.id}
                     </span>
                   </div>
                 ))}
@@ -343,19 +403,33 @@ export default function AdminDashboard() {
                 </button>
               </div>
               <div className="divide-y" style={{ borderColor: C.border }}>
-                {users.slice(0, 5).map((u) => (
+                {loadingUsers ? (
+                  <div className="flex items-center justify-center py-10">
+                    <p className="text-sm font-semibold" style={{ color: C.muted }}>Chargement…</p>
+                  </div>
+                ) : users.slice(0, 5).map((u) => (
                   <div key={u.id} className="flex items-center gap-3 px-5 py-3">
                     <div
                       className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
                       style={{ background: C.rose }}
                     >
-                      {u.nom.charAt(0)}
+                      {(u.username ?? u.numero).charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold" style={{ color: C.ink }}>{u.nom}</p>
+                      <p className="truncate text-sm font-semibold" style={{ color: C.ink }}>
+                        {u.username ?? `Utilisateur #${u.id}`}
+                      </p>
                       <p className="text-xs" style={{ color: C.muted }}>{u.numero}</p>
                     </div>
-                    <span className="shrink-0 text-xs font-medium" style={{ color: C.dim }}>{u.joined}</span>
+                    <span
+                      className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold"
+                      style={{
+                        background: u.role === "admin" ? C.rosePale : u.role === "expert" ? C.amberPale : C.bluePale,
+                        color: u.role === "admin" ? C.rose : u.role === "expert" ? C.amber : C.blue,
+                      }}
+                    >
+                      {u.role}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -579,7 +653,12 @@ export default function AdminDashboard() {
 
           {/* Cards */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredUsers.map((u) => (
+            {loadingUsers && (
+              <div className="col-span-3 flex items-center justify-center py-14">
+                <p className="text-sm font-semibold" style={{ color: C.muted }}>Chargement des utilisateurs…</p>
+              </div>
+            )}
+            {!loadingUsers && filteredUsers.map((u) => (
               <div
                 key={u.id}
                 className="group rounded-2xl border bg-white p-5 transition-all"
@@ -597,22 +676,24 @@ export default function AdminDashboard() {
                 <div className="mb-4 flex items-start gap-3">
                   <div
                     className="flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-                    style={{ background: u.status === "active" ? C.rose : C.dim }}
+                    style={{ background: u.role === "admin" ? C.rose : u.role === "expert" ? C.amber : C.blue }}
                   >
-                    {u.nom.charAt(0)}
+                    {(u.username ?? u.numero).charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold" style={{ color: C.ink }}>{u.nom}</p>
-                    <p className="truncate text-xs" style={{ color: C.muted }}>{u.email}</p>
+                    <p className="truncate text-sm font-bold" style={{ color: C.ink }}>
+                      {u.username ?? `Utilisateur #${u.id}`}
+                    </p>
+                    <p className="truncate text-xs" style={{ color: C.muted }}>Matricule : {u.numero}</p>
                   </div>
                   <span
                     className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold"
                     style={{
-                      background: u.status === "active" ? C.tealPale : "#F1F3FA",
-                      color: u.status === "active" ? C.teal : C.muted,
+                      background: u.role === "admin" ? C.rosePale : u.role === "expert" ? C.amberPale : C.tealPale,
+                      color: u.role === "admin" ? C.rose : u.role === "expert" ? C.amber : C.teal,
                     }}
                   >
-                    {u.status === "active" ? "Actif" : "Inactif"}
+                    {u.role}
                   </span>
                 </div>
 
@@ -628,11 +709,11 @@ export default function AdminDashboard() {
                     className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold"
                     style={{ background: C.amberPale, color: C.amber }}
                   >
-                    <FileText className="size-3" /> {u.docs} docs
+                    <UserCircle className="size-3" /> ID {u.id}
                   </div>
                 </div>
 
-                <p className="mb-4 text-[11px]" style={{ color: C.dim }}>Inscrit le {u.joined}</p>
+                <p className="mb-4 text-[11px]" style={{ color: C.dim }}>Rôle : {u.role}</p>
 
                 {/* Actions */}
                 <div className="flex gap-2 border-t pt-4" style={{ borderColor: C.border }}>
@@ -783,8 +864,9 @@ export default function AdminDashboard() {
           <Modal title="Réinitialiser le mot de passe" onClose={() => setShowResetModal(null)}>
             <div className="space-y-5">
               <p className="text-sm leading-6" style={{ color: C.mid }}>
-                Un lien de réinitialisation sera envoyé à{" "}
-                <strong style={{ color: C.ink }}>{u?.nom}</strong> ({u?.email}).
+                Réinitialisation du mot de passe pour{" "}
+                <strong style={{ color: C.ink }}>{u?.username ?? `Utilisateur #${u?.id}`}</strong>{" "}
+                (matricule : {u?.numero}).
               </p>
               <div
                 className="flex items-center gap-3 rounded-[12px] border px-4 py-3"

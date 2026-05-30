@@ -92,6 +92,8 @@ export const logoutRequest = () => api.post("/logout")
 // ─── API calls ────────────────────────────────────────────────────────────────
 export const fetchCategories       = () => api.get("/categories").then(r => r.data)
 export const fetchStats            = () => api.get("/stats").then(r => r.data)
+export const fetchUsers            = () => api.get("/users").then(r => r.data)
+export const fetchLatestDocuments  = () => api.get("/latest-documents").then(r => r.data)
 export const fetchDocuments        = () => api.get("/documents").then(r => r.data)
 export const fetchHistoriques      = () => api.get("/historiques").then(r => r.data)
 export const fetchLiensUtiles      = () => api.get("/liens-utiles").then(r => r.data)
