@@ -1,37 +1,44 @@
-/**
- * useInitAuth.ts
- *
- * Au démarrage de l'app, tente de récupérer un access token via le cookie
- * refresh_token (httpOnly). Pendant ce temps, isInitializing = true afin
- * qu'App.tsx n'évalue pas encore les routes protégées (évite la fausse
- * redirection vers /login pour un utilisateur déjà connecté).
- */
 import { useEffect } from "react"
-import api, { setAccessToken } from "@/api/api"
+import { fetchMe } from "@/api/api"
 import { useAuthStore } from "@/store/useAuthStore"
 
+// ─── useInitAuth ──────────────────────────────────────────────────────────────
+//
+// Hook appelé une seule fois au montage de l'app (ex: dans App.tsx ou le
+// composant racine protégé) pour récupérer l'utilisateur courant depuis le
+// cookie httpOnly existant.
+//
+// CORRECTION : l'ancien hook laissait l'intercepteur axios gérer les 401
+// de /me, ce qui pouvait provoquer une redirection vers le login alors que
+// l'utilisateur était en train de naviguer. Désormais :
+//   - /me est dans la liste "silentUrls" de l'intercepteur → pas de redirect
+//   - En cas d'erreur (401 ou réseau), on pose user=null proprement et on
+//     laisse le guard de route décider quoi faire.
+//   - setInitializing(false) est TOUJOURS appelé dans finally, même en cas
+//     d'erreur réseau transitoire, pour éviter un spinner infini.
+//
 export function useInitAuth() {
   const { setUser, setInitializing } = useAuthStore()
 
   useEffect(() => {
     const init = async () => {
       try {
-        // /refresh renvoie { access_token, role }
-        const refreshRes = await api.post("/api/refresh")
-        setAccessToken(refreshRes.data.access_token)
-
-        // /me renvoie { numero, username, role }
-        const meRes = await api.get("/api/me")
+        // /me est exclu de la redirection automatique dans l'intercepteur 401.
+        // Si le cookie est absent ou expiré, on arrive dans le catch → user=null.
+        const me = await fetchMe()
         setUser({
-          numero:   meRes.data.numero,
-          username: meRes.data.username,
-          role:     meRes.data.role,
+          numero: me.numero,
+          username: me.username,
+          role: me.role,
         })
       } catch {
-        // Pas de session active — c'est normal
+        // 401  → pas de cookie valide, utilisateur non connecté (cas normal).
+        // 5xx / réseau → erreur transitoire : on ne déconnecte pas l'utilisateur
+        // brutalement, on laisse juste user=null et le guard de route gère.
         setUser(null)
       } finally {
-        // Dans tous les cas on débloque le rendu des routes
+        // Indispensable : sans ce finally, une erreur réseau laisserait
+        // isInitializing=true et l'app resterait bloquée sur le spinner.
         setInitializing(false)
       }
     }

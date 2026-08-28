@@ -31,7 +31,7 @@
  *   </CanSee>
  */
 
-import { Navigate } from "react-router-dom"
+import { Navigate } from "react-router"
 import { useAuthStore, type UserRole } from "@/store/useAuthStore"
 
 // ─── Hiérarchie ──────────────────────────────────────────────────────────────

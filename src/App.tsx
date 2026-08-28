@@ -1,26 +1,32 @@
-import { DocumentList } from "./components/document-list"
-import Navbar from "./components/navbar"
-import { Chatbot } from "./components/chat/chatbot"
-import { TexteDetails } from "./components/texte-details"
-import { Navigate, Route, Routes } from "react-router-dom"
+import { Chatbot } from "./components/backoffice/chatbot/chatbot"
+import { Navigate, Route, Routes } from "react-router"
 import { LoginForm } from "./components/login-form"
-import { RegisterForm } from "./components/register-form"
-import UploadForm from "./components/form-upload"
-import Stats from "./components/stats"
-import Dashboard from "./components/dashboard"
-import ProtectedRoute from "./components/protected-route"
-import Home from "./components/home"
 import { useInitAuth } from "./auth/useInitAuth"
 import { useAuthStore } from "./store/useAuthStore"
-import NotificationPanel from "./components/notification"
-import PDFStats from "./components/pdf-stat"
-import { Chunker } from "./components/chunker"
+import { TexteDouaniere } from "./components/textedouaniere/texte-douaniere"
+import { TexteDouaniereDetails } from "./components/textedouaniere/texte-douaniere-details"
+import { BackOffice } from "./components/backoffice/backoffice"
+import { CategorySection } from "./components/backoffice/section/categorie/categorie-section"
+import { ThemeSection } from "./components/backoffice/section/theme/theme-section"
+import { TextesSection } from "./components/backoffice/section/textes/textes-section"
+import { AddTexteSection } from "./components/backoffice/section/add-texte/add-texte-section"
+import { StatutSection } from "./components/backoffice/section/statut/statut-section"
+import ProtectedRoute from "./components/protected-route"
+import Home from "./components/home"
+import { Users } from "./components/backoffice/section/user/users-section"
+import { ConsommationSection } from "./components/backoffice/section/consommation/consommation-section"
+import { HistoriqueSection } from "./components/backoffice/section/historique/historique-section"
+import { ApercuSection } from "./components/backoffice/section/apercu/apercu-section"
+import { ApercuSectionDetails } from "./components/backoffice/section/apercu/apercu-section-details"
+import { BDDVectorielle } from "./components/backoffice/section/bdd_vectorielle/bdd-vectorielle-section"
 
-function App() {
+// ─── Chemins publics centralisés ────────────────────────────────────────────
+
+export default function App() {
   useInitAuth()
-  const { user, isInitializing } = useAuthStore()
+  const { isInitializing } = useAuthStore()
 
-  // On attend que le refresh initial soit terminé avant de rendre les routes.
+  // On attend que l'appel initial à /me soit terminé avant de rendre les routes.
   // Sans ça, React voit user=null pendant ~200ms et redirige vers /login
   // même si l'utilisateur est bien connecté (F5, retour d'onglet...).
   if (isInitializing) {
@@ -41,111 +47,53 @@ function App() {
     <div
       className="flex min-h-screen flex-col"
       style={{
-        background: "#F0F4FF",
         fontFamily: "'Plus Jakarta Sans', sans-serif",
       }}
     >
-      <Navbar />
-
-      <main className="flex-1" style={{ paddingTop: 62 }}>
+      <main className="flex-1">
         <Routes>
           {/* ── Publiques ─────────────────────────────────────────── */}
-          {/* <Route path="/" element={<Home />} /> */}
-          <Route path="/" element={<Chunker />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/douane/texdou" element={<TexteDouaniere />} />
           <Route
-            path="/login"
-            element={
-              <AuthPage>
-                <LoginForm />
-              </AuthPage>
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              <AuthPage>
-                <RegisterForm />
-              </AuthPage>
-            }
+            path="/douane/texdou/:id"
+            element={<TexteDouaniereDetails />}
           />
 
-          {/* ── Protégées (tout utilisateur connecté) ─────────────── */}
+          {/* ── Backoffice (privé) ───────────────────────────────────
+              Toute la branche /douane/backoffice/* est protégée : le
+              layout parent est enveloppé dans ProtectedRoute, donc
+              toutes les routes filles (rendues via <Outlet />) héritent
+              automatiquement de la protection. Pas besoin de re-wrapper
+              chaque enfant individuellement. */}
           <Route
-            path="/chatbot"
+            path="/douane/backoffice"
             element={
               <ProtectedRoute>
-                <Chatbot />
+                <BackOffice />
               </ProtectedRoute>
             }
-          />
-          <Route
-            path="/documents"
-            element={
-              <ProtectedRoute>
-                <DocumentList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/documents/:id"
-            element={
-              <ProtectedRoute>
-                <TexteDetails />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/stats"
-            element={
-              <ProtectedRoute>
-                <Stats />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/pdf-stats"
-            element={
-              <ProtectedRoute>
-                <PDFStats />
-              </ProtectedRoute>
-            }
-          />
+          >
+            <Route path="" element={<TextesSection />} />
+            <Route path="apercu" element={<ApercuSection />}>
+              <Route path=":id" element={<ApercuSectionDetails/>}/>
+            </Route>
+            <Route path="bdd-vectorielle" element={<BDDVectorielle/>}>
 
-          <Route
-            path="/chunker"
-            element={
-              <ProtectedRoute>
-                <Chunker />
-              </ProtectedRoute>
-            }
-          />
+            </Route>
+            <Route path="add-categorie" element={<CategorySection />} />
+            <Route path="add-texte" element={<AddTexteSection />} />
+            <Route path="edit-texte/:id" element={<AddTexteSection />} />
+            <Route path="add-theme" element={<ThemeSection />} />
+            <Route path="add-statut" element={<StatutSection />} />
+            <Route path="chatbot" element={<Chatbot />} />
+            <Route path="users" element={<Users />} />
+            <Route path="historiques" element={<HistoriqueSection />} />
+            <Route path="consommations" element={<ConsommationSection />} />
+          </Route>
 
-          <Route
-            path="/notification"
-            element={
-              <ProtectedRoute>
-                <NotificationPanel />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/upload"
-            element={
-              <ProtectedRoute>
-                <UploadForm />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* ── Protégée + rôle admin/expert (géré dans ProtectedRoute) ── */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute requiredRole="expert">
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
+          {/* Authentification — route canonique = ROUTES.login ("/login") */}
+          <Route path="/douane/manager" element={<LoginForm />} />
 
           {/* ── Fallback ──────────────────────────────────────────── */}
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -154,17 +102,3 @@ function App() {
     </div>
   )
 }
-
-/** Wrapper centré pour les pages login / register */
-const AuthPage = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex min-h-full w-full items-center justify-center px-4 py-12">
-    <div
-      className="w-full max-w-md rounded-2xl border bg-white p-8 shadow-sm"
-      style={{ borderColor: "#E4E9F7" }}
-    >
-      {children}
-    </div>
-  </div>
-)
-
-export default App

@@ -13,8 +13,8 @@ type FiltreState = {
   updateDateFin: (newDateFin: Date | undefined) => void
   mots_cles:string | undefined
   updateMotsCles: (newMotsCles: string | undefined) => void
-  contenu_html: string | undefined
-  updateContenuHtml: (newContenuHtml: string | undefined) => void
+  annee: number | undefined
+  updateAnnee: (newContenuHtml: number | undefined) => void
 }
 
 export const useFiltre = create<FiltreState>((set) => ({
@@ -24,7 +24,7 @@ export const useFiltre = create<FiltreState>((set) => ({
   date_debut: undefined,
   date_fin: undefined,
   mots_cles: undefined,
-  contenu_html: undefined,
+  annee: undefined,
 
   updateStatut: (newStatut) => set({ statut: newStatut }),
   updateCategorie: (newCategorie) => set({ categorie: newCategorie }),
@@ -32,5 +32,5 @@ export const useFiltre = create<FiltreState>((set) => ({
   updateDateDebut: (newDateDebut) => set({ date_debut: newDateDebut }),
   updateDateFin: (newDateFin) => set({ date_fin: newDateFin }),
   updateMotsCles: (newMotsCles) => set({ mots_cles: newMotsCles }),
-  updateContenuHtml: (newContenuHtml) => set({ contenu_html: newContenuHtml }),
+  updateAnnee: (newAnnee) => set({ annee: newAnnee }),
 }))

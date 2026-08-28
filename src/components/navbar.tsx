@@ -18,6 +18,7 @@ import {
   Trash2,
   Sparkle,
   Sparkles,
+  FolderSymlink,
 } from "lucide-react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useAuthStore } from "@/store/useAuthStore"
@@ -25,6 +26,7 @@ import { logoutRequest, clearAccessToken } from "@/api/api"
 import { Separator } from "./ui/separator"
 import { useState, useRef, useEffect } from "react"
 import { CanSee } from "./protected-route"
+import { cn } from "@/lib/utils"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -163,7 +165,7 @@ const TYPE_CONFIG: Record<
 
 // ─── Navbar ───────────────────────────────────────────────────────────────────
 
-export default function Navbar() {
+export default function Navbar({ className }: { className?: string }) {
   const location = useLocation()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
@@ -215,7 +217,7 @@ export default function Navbar() {
 
   return (
     <header
-      className="fixed z-10 w-full border-b bg-white"
+      className={cn("fixed z-10 w-full border-b-2 bg-white", className)}
       style={{
         borderColor: "#E4E9F7",
         height: "62px",
@@ -451,6 +453,14 @@ export default function Navbar() {
             )}
           </CanSee>
           {/* Auth */}
+          <Link
+            to="/arrangement"
+            className="flex items-center gap-2 rounded-[10px] px-3 py-1.5 text-sm font-semibold no-underline transition-all hover:bg-[#F0F4FF]"
+            style={{ color: "#6B7290" }}
+          >
+            <FolderSymlink className="size-4" />
+            Arrangement
+          </Link>
           {user ? (
             <button
               onClick={handleLogout}
