@@ -14,6 +14,7 @@ import { StatutSection } from "./components/backoffice/section/statut/statut-sec
 import ProtectedRoute from "./components/protected-route"
 import Home from "./components/home"
 import { Users } from "./components/backoffice/section/user/users-section"
+import { CodeDouanesSection } from "./components/backoffice/section/code_des_douanes/code-douanes-section"
 import { ConsommationSection } from "./components/backoffice/section/consommation/consommation-section"
 import { HistoriqueSection } from "./components/backoffice/section/historique/historique-section"
 import { ApercuSection } from "./components/backoffice/section/apercu/apercu-section"
@@ -76,11 +77,9 @@ export default function App() {
           >
             <Route path="" element={<TextesSection />} />
             <Route path="apercu" element={<ApercuSection />}>
-              <Route path=":id" element={<ApercuSectionDetails/>}/>
+              <Route path=":id" element={<ApercuSectionDetails />} />
             </Route>
-            <Route path="bdd-vectorielle" element={<BDDVectorielle/>}>
-
-            </Route>
+            <Route path="bdd-vectorielle" element={<BDDVectorielle />}></Route>
             <Route path="add-categorie" element={<CategorySection />} />
             <Route path="add-texte" element={<AddTexteSection />} />
             <Route path="edit-texte/:id" element={<AddTexteSection />} />
@@ -88,6 +87,7 @@ export default function App() {
             <Route path="add-statut" element={<StatutSection />} />
             <Route path="chatbot" element={<Chatbot />} />
             <Route path="users" element={<Users />} />
+            <Route path="code-des-douanes" element={<CodeDouanesSection />} />
             <Route path="historiques" element={<HistoriqueSection />} />
             <Route path="consommations" element={<ConsommationSection />} />
           </Route>

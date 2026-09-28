@@ -22,6 +22,7 @@ import {
   Gauge,
   PlusIcon,
   RotateCcwClock,
+  Scale,
   Tags,
   TypeOutline,
 } from "lucide-react"
@@ -34,7 +35,6 @@ const data = {
       icon: <Eye />,
       accessibility: "normal,admin,expert",
     },
-
     {
       title: "Chatbot",
       url: "/douane/backoffice/chatbot",
@@ -77,6 +77,12 @@ const data = {
       icon: <UsersIcon />,
       // Route backend protégée par require_admin_or_expert (voir
       // user_route.py) : admin et expert y ont accès.
+      accessibility: "admin,expert",
+    },
+    {
+      title: "Code des douanes",
+      url: "/douane/backoffice/code-des-douanes",
+      icon: <Scale />,
       accessibility: "admin,expert",
     },
     {

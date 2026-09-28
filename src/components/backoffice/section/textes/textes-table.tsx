@@ -123,11 +123,11 @@ export const TextesTable = React.memo(function TextesTable({
                 <TableHead className="text-xs font-medium tracking-wide text-slate-500 uppercase">
                   Mise en vigueur
                 </TableHead>
-                {user?.role != "normal" && (
+                {/* {user?.role != "normal" && (
                   <TableHead className="text-xs font-medium tracking-wide text-slate-500 uppercase">
                     Qualité Doc.
                   </TableHead>
-                )}
+                )} */}
                 {user?.role != "normal" && (
                   <TableHead className="text-xs font-medium tracking-wide text-slate-500 uppercase">
                     Public
@@ -267,12 +267,12 @@ export const TextesTable = React.memo(function TextesTable({
                           <TableCell className="align-top text-sm text-slate-600">
                             {t.dateMiseEnVigueur || "—"}
                           </TableCell>
-                          {user?.role != "normal" && (
+                          {/* {user?.role != "normal" && (
                             <TableCell>
                               Bonne{" "}
                               <InfoIcon className="ml-1 inline h-3 w-3 text-slate-400" />
                             </TableCell>
-                          )}
+                          )} */}
                           {user?.role != "normal" && (
                             <TableCell>
                               <Checkbox

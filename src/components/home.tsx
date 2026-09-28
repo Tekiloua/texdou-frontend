@@ -60,13 +60,13 @@ export default function Home() {
           </h1>
 
           {/* Subtitle */}
-          <p className="mx-auto mb-3 max-w-2xl text-sm leading-7 text-foreground sm:text-base">
+          <p className="mx-auto font-bol mb-3 max-w-3xl text-lg leading-7 text-foreground">
             La plateforme officielle de consultation des textes réglementaires
             douaniers malagasy : lois, décrets, circulaires et tarifs, classés
             et accessibles en toute simplicité.
           </p>
           <p
-            className="mx-auto mb-9 max-w-2xl text-xs leading-6 sm:text-sm text-foreground"
+            className="mx-auto mb-9 max-w-2xl text-sm leading-6 sm:text-sm text-foreground"
           >
             Un point d'accès unique, pensé pour les agents de l'administration,
             les opérateurs économiques et tout citoyen souhaitant comprendre la
@@ -110,12 +110,12 @@ export default function Home() {
             <ArrowRight className="size-4" />
           </Link>
 
-          <p
+          {/* <p
             className="mt-5 text-[11px] font-medium"
             style={{ color: C.mid, opacity: 0.8 }}
           >
             Petites remarque qu'on aimerais affichées
-          </p>
+          </p> */}
         </div>
       </section>
     </div>

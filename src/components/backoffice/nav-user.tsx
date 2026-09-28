@@ -92,21 +92,13 @@ export function NavUser({
           </SheetHeader>
 
           <div className="flex flex-col gap-1 px-4">
-            <button
+            {/* <button
               type="button"
               className="flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
             >
               <UserCircleIcon />
               {user.username}
-            </button>
-            <button
-              type="button"
-              className="flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
-            >
-              <CreditCardIcon />
-              Modifier Profil
-            </button>
-
+            </button> */}
             <div className="my-2 h-px bg-border" />
 
             <button

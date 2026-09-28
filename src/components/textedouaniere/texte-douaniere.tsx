@@ -1,5 +1,11 @@
 import { useLocation, Link } from "react-router"
-import { ArrowRight, LoaderCircle, FileText, Calendar } from "lucide-react"
+import {
+  ArrowRight,
+  LoaderCircle,
+  FileText,
+  Calendar,
+  LogIn,
+} from "lucide-react"
 import { Filtre } from "../Filter/filtre"
 import { useEffect, useState } from "react"
 import {
@@ -150,7 +156,7 @@ export const TexteDouaniere = () => {
   const [currentPage, setCurrentPage] = useState<number>(0)
   const [pageWindow, setPageWindow] = useState<number>(0) // which group of 10 page buttons is visible
   const { user } = useAuthStore()
-  
+
   const {
     data: dataCategories,
     isLoading: isLoadingCategories,
@@ -159,19 +165,19 @@ export const TexteDouaniere = () => {
     queryKey: ["categories"],
     queryFn: fetchCategories,
   })
-  
+
   const {
     data: dataThemes,
     isLoading: isLoadingThemes,
     error: errorFetchThemes,
   } = useQuery<ThemeType[]>({ queryKey: ["themes"], queryFn: fetchThemes })
-  
+
   const {
     data: dataStatuts,
     isLoading: isLoadingStatuts,
     error: errorFetchStatuts,
   } = useQuery<StatutType[]>({ queryKey: ["statuts"], queryFn: fetchStatuts })
-  
+
   const {
     data: dataTextes,
     isLoading: isLoadingTextes,
@@ -242,11 +248,22 @@ export const TexteDouaniere = () => {
               Textes Douanières
             </h1>
           </div>
-          <span className="inline-flex items-center gap-2 self-start rounded-full bg-cyan-50 px-3.5 py-1.5 text-[12px] font-bold text-cyan-700 ring-1 ring-cyan-200 sm:self-auto">
-            <FileText className="size-3.5" />
-            {dataTextesFiltered.length} texte
-            {dataTextesFiltered.length > 1 ? "s" : ""}
-          </span>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <span className="inline-flex items-center gap-2 rounded-full bg-cyan-50 px-3.5 py-1.5 text-[12px] font-bold text-cyan-700 ring-1 ring-cyan-200">
+              <FileText className="size-3.5" />
+              {dataTextesFiltered.length} texte
+              {dataTextesFiltered.length > 1 ? "s" : ""}
+            </span>
+            {!user && (
+              <Link
+                to="/douane/manager"
+                className="inline-flex items-center gap-2 rounded-full bg-cyan-700 px-3.5 py-1.5 text-[12px] font-bold text-white no-underline shadow-sm transition-all hover:bg-cyan-800"
+              >
+                <LogIn className="size-3.5" />
+                Connexion
+              </Link>
+            )}
+          </div>
         </header>
 
         {/* ── Filter panel ── */}
@@ -273,7 +290,7 @@ export const TexteDouaniere = () => {
 
         {/* ── Grid ── */}
         {nbPage > 0 ? (
-          <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
             {paginated.map((texte, i) => (
               <Texte
                 key={texte.id ?? i}

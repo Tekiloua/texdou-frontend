@@ -3,7 +3,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
-import { toast, Toaster } from "sonner"
+import { Toaster } from "sonner"
 import { Search, X, Check, CalendarIcon, ChevronDown } from "lucide-react"
 import {
   DropdownMenu,
@@ -29,7 +29,7 @@ import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import type { CategorieType, StatutType, ThemeType } from "@/types"
 import { useFiltre } from "@/store/useFiltre"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { REGEXP_ONLY_DIGITS } from "input-otp"
 
 type FiltreProps = {
@@ -106,7 +106,6 @@ export const Filtre = ({
   dataCategories,
   dataStatuts,
   dataThemes,
-  docTrouver,
 }: FiltreProps) => {
   const {
     annee,
@@ -356,7 +355,7 @@ export const Filtre = ({
                           {meta ? (
                             <span
                               className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold"
-                              style={{ background: meta.bg, color: meta.text }}
+                              // style={{ background: meta.bg, color: meta.text }}
                             >
                               <span
                                 className="size-1.5 shrink-0 rounded-full"
@@ -456,7 +455,7 @@ export const Filtre = ({
                     {meta ? (
                       <span
                         className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold"
-                        style={{ background: meta.bg, color: meta.text }}
+                        // style={{ background: meta.bg, color: meta.text }}
                       >
                         <span
                           className="size-1.5 shrink-0 rounded-full"

@@ -19,6 +19,8 @@ import {
   Hash,
   Link2,
   ExternalLink,
+  FileTextIcon,
+  Download,
 } from "lucide-react"
 import { decodeTitle } from "@/hooks/decode-html"
 import { useAuthStore } from "@/store/useAuthStore"
@@ -44,7 +46,7 @@ export const TexteDouaniereDetails = () => {
   const { data, isLoading, error } = useTexte()
   return (
     <div
-      className="min-h-screen px-4 py-8 md:px-10 lg:px-16"
+      className="min-h-screen px-3 py-5 sm:px-4 sm:py-8 md:px-10 lg:px-16"
       style={{
         background: "#F0F4FF",
         fontFamily: "'Plus Jakarta Sans', sans-serif",
@@ -84,23 +86,10 @@ const BackLink = () => {
     <button
       type="button"
       onClick={() => navigate(-1)}
-      className="mb-3 inline-flex items-center gap-2 rounded-[12px] px-3 py-2 text-xs font-bold tracking-widest uppercase no-underline transition-all"
-      style={{
-        background: "#fff",
-        color: "#6B7290",
-        border: "1.5px solid #E4E9F7",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "#4F7EF7"
-        e.currentTarget.style.color = "#4F7EF7"
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "#E4E9F7"
-        e.currentTarget.style.color = "#6B7290"
-      }}
+      className="mb-4 inline-flex items-center gap-1.5 rounded-[12px] border border-primary/40 px-2.5 py-1.5 text-[10px] font-bold tracking-wide uppercase no-underline transition-all hover:bg-slate-200 sm:mb-6 sm:gap-2 sm:px-3 sm:py-2 sm:text-xs sm:tracking-widest"
     >
-      <ArrowLeft className="size-3.5" />
-      Retour aux documents
+      <ArrowLeft className="size-3 shrink-0 sm:size-3.5" />
+      <span className="whitespace-nowrap">Retour aux documents</span>
     </button>
   )
 }
@@ -114,15 +103,13 @@ const TabsNav = () => {
       style={{ borderColor: "#E4E9F7" }}
     >
       {/* Tab bar */}
-      <div
-        className="flex overflow-x-auto border-b"
-        style={{ borderColor: "#E4E9F7" }}
-      >
+      <div className="flex border-b" style={{ borderColor: "#E4E9F7" }}>
         {tabs.map(({ value, label, icon: Icon }) => (
           <button
             key={value}
+            title={label}
             onClick={() => setActive(value)}
-            className="flex shrink-0 items-center gap-2 border-b-2 px-5 py-4 text-sm font-bold transition-all"
+            className="flex flex-1 shrink-0 items-center justify-center gap-0 border-b-2 px-2 py-3 text-xs font-bold whitespace-nowrap transition-all sm:flex-initial sm:justify-start sm:gap-2 sm:px-5 sm:py-4 sm:text-sm"
             style={
               active === value
                 ? {
@@ -137,8 +124,8 @@ const TabsNav = () => {
                   }
             }
           >
-            <Icon className="size-4" />
-            {label}
+            <Icon className="size-4 shrink-0 sm:size-4" />
+            <span className="hidden sm:inline">{label}</span>
           </button>
         ))}
       </div>
@@ -227,21 +214,25 @@ const DocHeader = ({ texte }: { texte: TexteType }) => {
   }
 
   return (
-    <div className="mb-6 border-b pb-6" style={{ borderColor: "#F0F4FF" }}>
+    <div
+      className="mb-4 border-b pb-4 sm:mb-6 sm:pb-6"
+      style={{ borderColor: "#F0F4FF" }}
+    >
       {/* Meta badges */}
-      <div className="mb-3 flex flex-wrap items-center gap-2">
+      <div className="mb-4 flex flex-wrap items-center gap-4 sm:gap-6">
         {texte.categorie && (
           <span
-            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold"
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold"
             style={{ background: "#EBF2FF", color: "#185FA5" }}
           >
-            <FileText className="size-3" />
+            <FileText className="size-4" />
             {texte.categorie}
           </span>
         )}
         {texte.statut && (
           <span
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold ${statusStyle.pill}`}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold ${statusStyle.pill}`}
+            style={{ background: "#EBF2FF", color: "#185FA5" }}
           >
             <span
               className="inline-block rounded-full"
@@ -252,10 +243,10 @@ const DocHeader = ({ texte }: { texte: TexteType }) => {
         )}
         {texte.numero && (
           <span
-            className="inline-flex items-center gap-1 rounded-full px-3 py-1 font-mono text-[11px] font-semibold"
-            style={{ background: "#F4F6FF", color: "#8892B0" }}
+            className="inline-flex items-center gap-1 rounded-full px-3 py-1 font-mono text-sm font-semibold"
+            style={{ background: "#EBF2FF", color: "#185FA5" }}
           >
-            <Hash className="size-3" />
+            <Hash className="size-4" />
             {texte.numero}
           </span>
         )}
@@ -283,22 +274,18 @@ const Resume = () => {
 
   return (
     <div>
-      <DocHeader texte={data} />
       <div
-        className="rounded-[12px] border-l-4 bg-[#F4F6FF] p-5"
+        className="rounded-[12px] border-l-4 bg-[#F4F6FF] p-4 sm:p-5"
         style={{ borderColor: "#4F7EF7" }}
       >
         <p
-          className="mb-2 text-[10px] font-bold tracking-[0.2em] uppercase"
-          style={{ color: "#8892B0" }}
+          className="mb-2 text-base text-blue-800 font-bold tracking-[0.2em] uppercase"
+          // style={{ color: "#185FA5" }}
         >
           Résumé
         </p>
         {data.resume?.trim() ? (
-          <div
-            className="prose prose-sm max-w-none text-sm leading-relaxed"
-            style={{ color: "#1A1D2E" }}
-          >
+          <div className="prose prose-sm max-w-none text-base leading-relaxed">
             {decodeTitle(data.resume)}
           </div>
         ) : (
@@ -351,7 +338,6 @@ const References = () => {
   if (!references || references.length === 0) {
     return (
       <div>
-        <DocHeader texte={texte} />
         <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
           <div
             className="flex items-center justify-center rounded-[14px]"
@@ -369,7 +355,6 @@ const References = () => {
 
   return (
     <div className="max-h-142 overflow-y-auto">
-      <DocHeader texte={texte} />
       <ul className="flex flex-col gap-2.5">
         {references.map((ref) => {
           // Si le texte référencé est dans notre base, on redirige vers sa page.
@@ -453,7 +438,7 @@ const References = () => {
               {isInternal ? (
                 <Link
                   to={internalHref}
-                  className="flex items-center gap-3 rounded-[12px] border p-4 no-underline transition-all"
+                  className="flex items-center gap-2.5 rounded-[12px] border p-3 no-underline transition-all sm:gap-3 sm:p-4"
                   style={sharedStyles}
                   onMouseEnter={hoverEnter}
                   onMouseLeave={hoverLeave}
@@ -465,7 +450,7 @@ const References = () => {
                   href={externalHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 rounded-[12px] border p-4 no-underline transition-all"
+                  className="flex items-center gap-2.5 rounded-[12px] border p-3 no-underline transition-all sm:gap-3 sm:p-4"
                   style={sharedStyles}
                   onMouseEnter={hoverEnter}
                   onMouseLeave={hoverLeave}
@@ -497,7 +482,6 @@ const PdfView = () => {
   if (!documents || documents.length === 0) {
     return (
       <div>
-        <DocHeader texte={texte} />
         <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
           <div
             className="flex items-center justify-center rounded-[14px]"
@@ -515,7 +499,6 @@ const PdfView = () => {
 
   return (
     <div className="max-h-142 overflow-y-auto">
-      <DocHeader texte={texte} />
       <ul className="flex flex-col gap-2.5">
         {documents.map((doc) => (
           <li key={doc.id}>
@@ -523,22 +506,17 @@ const PdfView = () => {
               href={doc.nouveau_chemin || doc.chemin_fichier || "#"}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-[12px] border p-4 text-sm font-semibold no-underline transition-all"
-              style={{ borderColor: "#E4E9F7", color: "#1A1D2E" }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "#4F7EF7"
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "#E4E9F7"
-              }}
+              className="flex items-center gap-2.5 rounded-[12px] border-2 border-primary/40 p-3 text-sm font-semibold no-underline transition-all sm:gap-3 sm:p-4"
+              style={{ color: "#1A1D2E" }}
             >
               <div
                 className="flex shrink-0 items-center justify-center rounded-[10px]"
                 style={{ width: 36, height: 36, background: "#EBF2FF" }}
               >
-                <FileArchive className="size-4" style={{ color: "#4F7EF7" }} />
+                <FileTextIcon className="size-6" style={{ color: "#4F7EF7" }} />
               </div>
               <span className="truncate">{doc.nom || "Document sans nom"}</span>
+              <Download className="ml-auto size-5" />
             </a>
           </li>
         ))}
@@ -563,7 +541,6 @@ const LiensUtilesView = () => {
   if (!liensUtiles || liensUtiles.length === 0) {
     return (
       <div>
-        <DocHeader texte={texte} />
         <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
           <div
             className="flex items-center justify-center rounded-[14px]"
@@ -581,7 +558,6 @@ const LiensUtilesView = () => {
 
   return (
     <div className="max-h-142 overflow-y-auto">
-      <DocHeader texte={texte} />
       <ul className="flex flex-col gap-2.5">
         {liensUtiles.map((lien) => (
           <li key={lien.id}>
@@ -589,7 +565,7 @@ const LiensUtilesView = () => {
               href={lien.url || "#"}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-[12px] border p-4 no-underline transition-all"
+              className="flex items-center gap-2.5 rounded-[12px] border p-3 no-underline transition-all sm:gap-3 sm:p-4"
               style={{ borderColor: "#E4E9F7", color: "#1A1D2E" }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = "#4F7EF7"
@@ -605,7 +581,10 @@ const LiensUtilesView = () => {
                 <ExternalLink className="size-4" style={{ color: "#4F7EF7" }} />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold" style={{ color: "#1A1D2E" }}>
+                <p
+                  className="truncate text-sm font-semibold"
+                  style={{ color: "#1A1D2E" }}
+                >
                   {lien.titre || "Lien sans titre"}
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -618,7 +597,10 @@ const LiensUtilesView = () => {
                     </span>
                   )}
                   {lien.url && (
-                    <span className="truncate text-[10px]" style={{ color: "#8892B0" }}>
+                    <span
+                      className="truncate text-[10px]"
+                      style={{ color: "#8892B0" }}
+                    >
                       {lien.url}
                     </span>
                   )}
